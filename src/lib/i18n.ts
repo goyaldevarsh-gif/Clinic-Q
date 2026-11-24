@@ -201,6 +201,7 @@ const HI: Record<string, string> = {
   'Off by default. When on, records you publish appear in the patient app, only for the mobile number they were issued to.': 'डिफ़ॉल्ट रूप से बंद। चालू होने पर आपके प्रकाशित रिकॉर्ड मरीज़ के ऐप में दिखेंगे, सिर्फ उसी मोबाइल नंबर को जिसके लिए बने हैं।',
   'Could not save': 'सेव नहीं हो सका',
   'Could not load appointments': 'अपॉइंटमेंट लोड नहीं हो सके',
+  'Send to desk': 'डेस्क पर भेजें',
 };
 export const getLang = () => lang;
 export const locale = () => (lang === 'hi' ? 'hi-IN' : 'en-IN');

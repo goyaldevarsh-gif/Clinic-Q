@@ -92,6 +92,7 @@ export function Queue() {
               <div className="truncate text-xs text-ink-2">{a.type}{a.reason ? ` · ${a.reason}` : ''}</div>
               <div className="mt-1 flex flex-wrap items-center gap-1.5"><StatusChip s={a.status} />
                 {a.status === 'waiting' && a.arrivedAt && <span className="chip bg-primary-50 text-primary-dark">✓ {t('Checked in')}</span>}
+                {deskId && a.status === 'waiting' && a.arrivedAt && !a.deskDocId && !a.deskErr && <button className="chip bg-violet-50 text-violet-700" onClick={() => run(() => pushToDesk(a.id, clinic))}>{t('Send to desk')}</button>}
                 {a.deskToken ? <span className="chip bg-violet-50 text-violet-700">{t('Desk')} {a.deskToken}</span> : null}
                 {a.deskErr && !a.deskDocId && <button className="chip bg-bad-50 text-bad" title={a.deskErr} onClick={() => pushToDesk(a.id, clinic)}>{t('Desk failed · retry')}</button>}
                 {a.phone && <a href={`tel:${a.phone}`} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-dark"><Phone size={12} />{a.phone}</a>}</div>
