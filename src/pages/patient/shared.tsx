@@ -26,6 +26,11 @@ export function PatientLayout() {
   );
 }
 
+/** "2 before you · about 10 min" in the current language */
+export function aheadText(t: (s: string) => string, ahead: number, minutes: number) {
+  return ahead === 0 ? t('You are next') : `${ahead} ${t('before you')} · ${t('about')} ${minutes} ${t('min')}`;
+}
+
 export const findClinic = (st: State, id: string): Clinic | undefined => st.clinics.find((c) => c.id === id);
 export const findDoctor = (c: Clinic | undefined, id: string) => c?.doctors.find((d) => d.id === id);
 

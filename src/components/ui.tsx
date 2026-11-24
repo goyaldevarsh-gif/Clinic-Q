@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, X } from 'lucide-react';
 import type { Status } from '../lib/types';
 import { fmtToken } from '../lib/slots';
-import { useT, setLang, useLang } from '../lib/i18n';
+import { useT, setLang, useLang, tr } from '../lib/i18n';
 
 export function Logo({ size = 28, text = true }: { size?: number; text?: boolean }) {
   return (
@@ -15,7 +15,8 @@ export function Logo({ size = 28, text = true }: { size?: number; text?: boolean
 }
 
 export function DemoBanner() {
-  return <div className="bg-warn-50 px-3 py-1 text-center text-[11px] font-semibold text-warn">Demo mode · data stays on this device · OTP 123456 · staff PIN 1234</div>;
+  useLang();
+  return <div className="bg-warn-50 px-3 py-1 text-center text-[11px] font-semibold text-warn">{tr('Demo mode · data stays on this device')} · OTP 123456 · PIN 1234</div>;
 }
 
 export function LangToggle() {
@@ -61,10 +62,10 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   );
 }
 
-export function TabBar({ items }: { items: { to: string; label: string; icon: ReactNode; end?: boolean }[] }) {
+export function TabBar({ items, className = '' }: { items: { to: string; label: string; icon: ReactNode; end?: boolean }[]; className?: string }) {
   const t = useT();
   return (
-    <nav className="safe-b fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white">
+    <nav className={`safe-b fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white ${className}`}>
       <div className="mx-auto flex max-w-xl">
         {items.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `group flex flex-1 flex-col items-center gap-0.5 pb-2 pt-1.5 text-[11px] font-semibold ${isActive ? 'text-primary-dark' : 'text-ink-2'}`}>

@@ -1,13 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarPlus, Clock, FileText, ListChecks, MapPin, Users } from 'lucide-react';
 import { useStore } from '../../lib/store';
-import { useT } from '../../lib/i18n';
+import { locale, useT } from '../../lib/i18n';
 import { fmt12, fmtToken, parseYmd, ymd } from '../../lib/slots';
 import { Avatar, Header, LangToggle, Logo } from '../../components/ui';
 import { ClinicIllustration } from '../../components/Illustration';
-import { findClinic, findDoctor, isUpcoming, myAppts, queueInfo, usePhone } from './shared';
+import { aheadText, findClinic, findDoctor, isUpcoming, myAppts, queueInfo, usePhone } from './shared';
 
-export const dayLabel = (d: string) => parseYmd(d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+export const dayLabel = (d: string) => parseYmd(d).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
 export function Home() {
   const t = useT(); const st = useStore(); const phone = usePhone(); const nav = useNavigate();
@@ -25,18 +25,18 @@ export function Home() {
     <Header title={<Logo size={26} />} right={<LangToggle />} />
     <div className="px-4 pt-5">
       <div className="text-[26px] font-extrabold leading-tight">{t('Namaste')}, {me?.name.split(' ')[0] ?? ''} 👋</div>
-      <div className="text-sm text-ink-2">{parseYmd(ymd(new Date())).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+      <div className="text-sm text-ink-2">{parseYmd(ymd(new Date())).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })}</div>
 
       {up && clinic && doc ? (
         <div className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-5 text-white shadow-card">
-          <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wide text-white/75">{t('Upcoming appointment')}</span><span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">{up.type}</span></div>
+          <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wide text-white/75">{t('Upcoming appointment')}</span><span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">{t(up.type)}</span></div>
           <div className="mt-3 flex items-center gap-3">
             <Avatar name={doc.name} size={48} tone="white" />
-            <div className="min-w-0 flex-1"><div className="truncate text-lg font-bold">{doc.name}</div><div className="truncate text-sm text-white/80">For {up.name}</div></div>
-            <div className="text-right"><div className="text-[10px] font-bold uppercase text-white/70">Token</div><div className="text-3xl font-extrabold leading-none">{fmtToken(up.token)}</div></div>
+            <div className="min-w-0 flex-1"><div className="truncate text-lg font-bold">{doc.name}</div><div className="truncate text-sm text-white/80">{t('For')} {up.name}</div></div>
+            <div className="text-right"><div className="text-[10px] font-bold uppercase text-white/70">{t('Token')}</div><div className="text-3xl font-extrabold leading-none">{fmtToken(up.token)}</div></div>
           </div>
           <div className="mt-4 space-y-1.5 text-sm font-medium"><div className="flex items-center gap-2"><Clock size={15} className="text-white/80" />{dayLabel(up.date)} · {fmt12(up.time)}</div><div className="flex items-center gap-2"><MapPin size={15} className="text-white/80" />{clinic.name}, {clinic.area}</div></div>
-          {q?.serving && <div className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)} · {q.ahead === 0 ? 'You are next' : `${q.ahead} before you · ~${q.minutes} min`}</div>}
+          {q?.serving && <div className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)} · {aheadText(t, q.ahead, q.minutes)}</div>}
           <div className="mt-4 grid grid-cols-2 gap-2"><button className="rounded-xl bg-white py-2.5 text-sm font-bold text-primary-dark" onClick={() => nav(`/confirmed/${up.id}`)}>{t('View details')}</button><button className="rounded-xl border border-white/40 py-2.5 text-sm font-bold text-white" onClick={() => nav(`/book?reschedule=${up.id}`)}>{t('Reschedule')}</button></div>
         </div>
       ) : (

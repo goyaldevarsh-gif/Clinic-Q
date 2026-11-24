@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Bandage, Check, MapPin, Stethoscope } from 'lucide-react';
 import { useStore, store } from '../../lib/store';
-import { useT } from '../../lib/i18n';
+import { locale, useT } from '../../lib/i18n';
 import { BookError, HORIZON_DAYS, addDays, fmt12, parseYmd, slotInfos, ymd } from '../../lib/slots';
 import type { ApptType } from '../../lib/types';
 import { Avatar, Header, Stepper } from '../../components/ui';
@@ -49,7 +49,7 @@ export function Book() {
   const member = members.find((m) => m.id === memberId);
 
   const confirm = async () => {
-    if (!member || !doctor) return setErr(MSG.NAME);
+    if (!member || !doctor) return setErr(t(MSG.NAME));
     setBusy(true); setErr('');
     const input = { clinicId, doctorId: docId, date, time, type, memberId: member.id, name: member.name, age: member.age, phone, reason: reason.trim() || undefined };
     try {
@@ -57,14 +57,14 @@ export function Book() {
       nav(`/confirmed/${a.id}`, { replace: true });
     } catch (e) {
       const code = e instanceof BookError ? e.code : '';
-      setErr(MSG[code] ?? 'Something went wrong. Please try again.');
+      setErr(t(MSG[code] ?? 'Something went wrong. Please try again.'));
       if (code === 'FULL' || code === 'NO_SLOT' || code === 'PAST') { setTime(''); setStep(2); }
     } finally { setBusy(false); }
   };
 
   return (<>
-    <Header title={old ? 'Reschedule' : t('Book appointment')} back />
-    <Stepper step={step} labels={['Clinic', 'Date & time', 'Confirm']} />
+    <Header title={old ? t('Reschedule') : t('Book appointment')} back />
+    <Stepper step={step} labels={[t('Clinic'), t('Date & time'), t('Confirm')]} />
     <div className="px-4 pt-4">
       {step === 1 && (<>
         <div className="lbl">{t('Select clinic')}</div>
@@ -95,12 +95,12 @@ export function Book() {
       </>)}
 
       {step === 2 && doctor && (<>
-        {old && <div className="mb-3 rounded-xl bg-primary-50 px-3 py-2 text-sm">Changing: <b>{dayLabel(old.date)} · {fmt12(old.time)}</b> at {clinic?.name}</div>}
+        {old && <div className="mb-3 rounded-xl bg-primary-50 px-3 py-2 text-sm">{t('Changing')}: <b>{dayLabel(old.date)} · {fmt12(old.time)}</b> at {clinic?.name}</div>}
         <div className="lbl">{t('Select date')}</div>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
           {days.map((d) => { const p = parseYmd(d); const open = dayOpen(d); return (
             <button key={d} disabled={!open} onClick={() => { setDate(d); setTime(''); }} className={`flex w-14 shrink-0 flex-col items-center rounded-2xl border py-2 ${date === d ? 'border-primary-dark bg-primary-dark text-white' : 'border-line bg-white'} disabled:opacity-35`}>
-              <span className="text-[11px] font-semibold">{p.toLocaleDateString('en-IN', { weekday: 'short' })}</span><span className="text-lg font-extrabold">{p.getDate()}</span><span className="text-[10px]">{p.toLocaleDateString('en-IN', { month: 'short' })}</span>
+              <span className="text-[11px] font-semibold">{p.toLocaleDateString(locale(), { weekday: 'short' })}</span><span className="text-lg font-extrabold">{p.getDate()}</span><span className="text-[10px]">{p.toLocaleDateString(locale(), { month: 'short' })}</span>
             </button>); })}
         </div>
         {date && (<>
@@ -108,28 +108,28 @@ export function Book() {
           {slots.length === 0 ? <div className="text-sm text-ink-2">{t('No slots on this day')}</div> : (
             <div className="grid grid-cols-3 gap-2">{slots.map((s) => { const off = s.past || s.left <= 0; return (
               <button key={s.time} disabled={off} onClick={() => setTime(s.time)} className={`rounded-xl border px-2 py-2.5 text-sm font-semibold ${time === s.time ? 'border-primary-dark bg-primary-dark text-white' : 'border-line bg-white'} disabled:bg-slate-50 disabled:text-slate-400 disabled:line-through`}>
-                {fmt12(s.time)}{!off && s.capacity > 1 && <div className={`text-[10px] font-medium ${time === s.time ? 'text-white/80' : 'text-ink-2'}`}>{s.left} left</div>}
+                {fmt12(s.time)}{!off && s.capacity > 1 && <div className={`text-[10px] font-medium ${time === s.time ? 'text-white/80' : 'text-ink-2'}`}>{s.left} {t('left')}</div>}
               </button>); })}</div>)}
         </>)}
-        <div className="mt-6 flex gap-2">{!old && <button className="btn-line" onClick={() => setStep(1)}>Back</button>}<button className="btn-primary flex-1" disabled={!date || !time} onClick={() => setStep(3)}>{t('Continue')}</button></div>
+        <div className="mt-6 flex gap-2">{!old && <button className="btn-line" onClick={() => setStep(1)}>{t('Back')}</button>}<button className="btn-primary flex-1" disabled={!date || !time} onClick={() => setStep(3)}>{t('Continue')}</button></div>
       </>)}
 
       {step === 3 && clinic && doctor && (<>
         <div className="card p-4">
-          <div className="font-bold">{doctor.name}</div><div className="text-sm text-ink-2">{type} · {clinic.name}, {clinic.area}</div>
+          <div className="font-bold">{doctor.name}</div><div className="text-sm text-ink-2">{t(type)} · {clinic.name}, {clinic.area}</div>
           <div className="mt-2 text-lg font-extrabold text-primary-dark">{dayLabel(date)} · {fmt12(time)}</div>
         </div>
         <div className="lbl mt-5">{t('Who is this for?')}</div>
         <div className="space-y-2">{members.map((m) => (
           <button key={m.id} onClick={() => setMemberId(m.id)} className={`card flex w-full items-center gap-3 p-3 text-left ${memberId === m.id ? '!border-primary ring-2 ring-primary/20' : ''}`}>
             <Avatar name={m.name} size={36} tone={m.relation === 'self' ? 'blue' : 'teal'} />
-            <div className="flex-1"><div className="font-semibold">{m.name}</div><div className="text-xs capitalize text-ink-2">{m.relation === 'self' ? 'You' : m.relation}{m.age ? ` · ${m.age}` : ''}</div></div>
+            <div className="flex-1"><div className="font-semibold">{m.name}</div><div className="text-xs capitalize text-ink-2">{m.relation === 'self' ? t('You') : t(m.relation)}{m.age ? ` · ${m.age}` : ''}</div></div>
             {memberId === m.id && <Check className="text-primary-dark" size={18} />}
           </button>))}</div>
         <label className="lbl mt-5" htmlFor="rs">{t('Reason for visit (optional)')}</label>
         <input id="rs" className="field" maxLength={120} placeholder="e.g. Follow-up after knee surgery" value={reason} onChange={(e) => setReason(e.target.value)} />
         {err && <div className="mt-4 rounded-xl bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{err}</div>}
-        <div className="mt-6 flex gap-2"><button className="btn-line" onClick={() => setStep(2)}>Back</button><button className="btn-primary flex-1" disabled={busy || !member} onClick={confirm}>{t('Confirm booking')}</button></div>
+        <div className="mt-6 flex gap-2"><button className="btn-line" onClick={() => setStep(2)}>{t('Back')}</button><button className="btn-primary flex-1" disabled={busy || !member} onClick={confirm}>{t('Confirm booking')}</button></div>
       </>)}
       {step !== 3 && err && <div className="mt-4 rounded-xl bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{err}</div>}
     </div>
