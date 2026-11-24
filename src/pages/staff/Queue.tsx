@@ -68,7 +68,8 @@ export function Queue() {
       {st.loadErr && <div className="mx-4 mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{t('Could not load appointments')} ({st.loadErr})</div>}
       {actOk && <div className="mx-4 mt-3 rounded-lg bg-ok-50 px-3 py-2 text-sm font-medium text-ok" role="status">✓ {t('Saved')}</div>}
       {actErr && <div className="mx-4 mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{t('Could not save')} ({actErr})</div>}
-      {firstWaiting && (
+      {deskId && <div className="mx-4 mt-3 rounded-xl bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700">{t('The doctor sees patients from the MedScript desk. Tap Arrived here; Seen comes back automatically.')}</div>}
+      {!deskId && firstWaiting && (
         <div className="mt-3 flex items-center gap-3 rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-4 text-white shadow-card">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold uppercase tracking-wide text-white/75">{t('Now serving')}</div>
@@ -100,12 +101,12 @@ export function Queue() {
             </div>
             {a.status === 'waiting' && <div className="flex flex-col gap-1.5">
               {!a.arrivedAt && <button className="btn-primary !px-3 !py-1.5 text-xs" onClick={() => run(() => arriveAndSend(a, clinic))}><LogIn size={14} />{t('Arrived')}</button>}
-              {a.arrivedAt && <button className="btn-soft !px-3 !py-1.5 text-xs" onClick={() => run(() => markSeen(a, clinic))}><Check size={14} />{t('Seen')}</button>}
+              {a.arrivedAt && !(deskId && a.deskDocId) && <button className="btn-soft !px-3 !py-1.5 text-xs" onClick={() => run(() => markSeen(a, clinic))}><Check size={14} />{t('Seen')}</button>}
               <div className="flex gap-1.5">
                 {!a.arrivedAt && a.phone && !a.walkIn && <a className="btn-soft !px-2.5 !py-1.5 text-xs" aria-label={t('Remind on WhatsApp')} title={t('Remind on WhatsApp')} href={reminderLink(a, clinic, doctor.name)} target="_blank" rel="noreferrer"><MessageCircle size={14} /></a>}
                 <button className="btn-bad !px-2.5 !py-1.5 text-xs" aria-label={t('Cancel')} onClick={() => setCancel(a)}><X size={14} />{a.arrivedAt ? t('Cancel') : ''}</button>
               </div></div>}
-            {a.status === 'seen' && <button className="rounded-full p-2 text-ink-2 hover:bg-slate-100" aria-label="Undo seen" onClick={() => run(() => undoSeen(a, clinic))}><RotateCcw size={16} /></button>}
+            {a.status === 'seen' && !(deskId && a.deskDocId) && <button className="rounded-full p-2 text-ink-2 hover:bg-slate-100" aria-label="Undo seen" onClick={() => run(() => undoSeen(a, clinic))}><RotateCcw size={16} /></button>}
           </div>))}
       </div>
     </div>

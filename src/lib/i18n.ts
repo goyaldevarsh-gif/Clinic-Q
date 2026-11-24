@@ -202,6 +202,7 @@ const HI: Record<string, string> = {
   'Could not save': 'सेव नहीं हो सका',
   'Could not load appointments': 'अपॉइंटमेंट लोड नहीं हो सके',
   'Send to desk': 'डेस्क पर भेजें',
+  'The doctor sees patients from the MedScript desk. Tap Arrived here; Seen comes back automatically.': 'डॉक्टर MedScript डेस्क से मरीज़ देखते हैं। यहाँ "पहुँच गए" दबाएँ; "देखा" अपने आप वापस आ जाएगा।',
 };
 export const getLang = () => lang;
 export const locale = () => (lang === 'hi' ? 'hi-IN' : 'en-IN');
