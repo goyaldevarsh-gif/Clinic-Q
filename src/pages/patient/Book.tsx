@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Bandage, Check, MapPin, Stethoscope } from 'lucide-react';
 import { useStore, store } from '../../lib/store';
@@ -43,6 +43,7 @@ export function Book() {
   const today = ymd(now);
 
   const days = useMemo(() => Array.from({ length: HORIZON_DAYS + 1 }, (_, i) => addDays(today, i)), [today]);
+  useEffect(() => (clinicId && docId ? store.watchDoctor(clinicId, docId) : undefined), [clinicId, docId]);
   const infoFor = (d: string) => (doctor ? slotInfos(doctor.schedule, st.appts, { clinicId, doctorId: docId }, d, now, old?.id) : []);
   const dayOpen = (d: string) => infoFor(d).some((s) => !s.past && s.left > 0);
   const slots = date ? infoFor(date) : [];

@@ -189,6 +189,10 @@ const HI: Record<string, string> = {
   'Connect': 'जोड़ें',
   'Try demo desk': 'डेमो डेस्क आज़माएँ',
   'That does not look like a MedScript desk link.': 'यह MedScript डेस्क लिंक जैसा नहीं लग रहा।',
+  'Could not send the OTP. Please try again.': 'OTP नहीं भेज सके। कृपया दोबारा कोशिश करें।',
+  'Could not sign in. Check email and password.': 'साइन-इन नहीं हुआ। ईमेल और पासवर्ड जाँचें।',
+  'Email': 'ईमेल',
+  'Password': 'पासवर्ड',
 };
 export const getLang = () => lang;
 export const locale = () => (lang === 'hi' ? 'hi-IN' : 'en-IN');

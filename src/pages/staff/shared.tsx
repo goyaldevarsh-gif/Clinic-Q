@@ -1,6 +1,7 @@
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { CalendarClock, ListOrdered, LogOut, Settings as Cog } from 'lucide-react';
-import { setSession, useSession } from '../../lib/session';
+import { signOutAll } from '../../lib/auth';
+import { useSession } from '../../lib/session';
 import { useStore } from '../../lib/store';
 import { useT } from '../../lib/i18n';
 import { Avatar, DemoBanner, LangToggle, Logo, TabBar } from '../../components/ui';
@@ -35,7 +36,7 @@ export function StaffLayout() {
         </nav>
         <div className="mt-auto space-y-2">
           <div className="flex justify-center"><LangToggle /></div>
-          <button className="btn-line w-full" onClick={() => { setSession(null); nav('/staff-login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
+          <button className="btn-line w-full" onClick={() => { signOutAll(); nav('/staff-login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
         </div>
       </aside>
       <main className="min-w-0 flex-1 pb-24 md:pb-10">

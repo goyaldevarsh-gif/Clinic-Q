@@ -3,6 +3,7 @@ import { Check, Link2, LogOut, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { store, useStore } from '../../lib/store';
 import { DEMO_DESK, demoDoctorSees, getDeskId, parseDeskLink, setDeskId } from '../../lib/desk';
+import { signOutAll } from '../../lib/auth';
 import { setSession } from '../../lib/session';
 import { useT } from '../../lib/i18n';
 import { Header, Modal } from '../../components/ui';
@@ -57,7 +58,7 @@ export function Settings() {
         <div className="mt-3 flex justify-center"><Qr text={link} size={170} /></div>
         <button className="btn-soft mt-3" onClick={async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ } }}><Link2 size={16} />{copied ? t('Copied') : t('Copy booking link')}</button>
       </div>
-      <button className="btn-line w-full" onClick={() => { setSession(null); nav('/staff-login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
+      <button className="btn-line w-full" onClick={() => { signOutAll(); nav('/staff-login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
       <button className="btn-bad w-full" onClick={() => setReset(true)}><RotateCcw size={16} />{t('Reset demo data')}</button>
     </div>
     {reset && <Modal title={t('Reset demo data?')} onClose={() => setReset(false)}>

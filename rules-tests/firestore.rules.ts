@@ -104,6 +104,15 @@ describe('booking', () => {
   });
 });
 
+describe('live queue list', () => {
+  it('public read, only own staff write', async () => {
+    await assertSucceeds(setDoc(doc(staff('staffMittal'), 'clinics', C, 'live', DAY), { arrived: [] }));
+    await assertSucceeds(getDoc(doc(anon(), 'clinics', C, 'live', DAY)));
+    await assertFails(setDoc(doc(patient(A), 'clinics', C, 'live', DAY), { arrived: [] }));
+    await assertFails(setDoc(doc(staff('staffOther'), 'clinics', C, 'live', DAY), { arrived: [] }));
+  });
+});
+
 describe('privacy of appointments', () => {
   beforeEach(async () => { await seed(A, 'a1'); });
   it('owner reads own appointment', async () => { await assertSucceeds(getDoc(doc(patient(A), 'clinics', C, 'appts', 'a1'))); });

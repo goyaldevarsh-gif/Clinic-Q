@@ -1,3 +1,4 @@
+import { USE_FB } from '../lib/backend';
 import { type ReactNode, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, X } from 'lucide-react';
@@ -16,6 +17,7 @@ export function Logo({ size = 28, text = true }: { size?: number; text?: boolean
 
 export function DemoBanner() {
   useLang();
+  if (USE_FB) return null;
   return <div className="bg-warn-50 px-3 py-1 text-center text-[11px] font-semibold text-warn">{tr('Demo mode · data stays on this device')} · OTP 123456 · PIN 1234</div>;
 }
 

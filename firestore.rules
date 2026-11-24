@@ -64,6 +64,12 @@ service cloud.firestore {
         }
       }
 
+      // "Who is checked in" list for the day, written by staff, read by patients to see how many are ahead.
+      match /live/{id} {
+        allow read: if true;
+        allow write: if isStaff(clinic);
+      }
+
       match /appts/{id} {
         function dayDoc() { return /databases/$(db)/documents/clinics/$(clinic)/days/$(request.resource.data.doctorId + '_' + request.resource.data.date); }
         function peopleDoc() { return /databases/$(db)/documents/clinics/$(clinic)/days/$(request.resource.data.doctorId + '_' + request.resource.data.date)/people/$(request.resource.data.phone + '_' + request.resource.data.memberId); }

@@ -12,6 +12,7 @@ let cache: Session = parse(raw);
 function parse(r: string | null): Session { try { return r ? (JSON.parse(r) as Session) : null; } catch { return null; } }
 
 export const getSession = () => cache;
+export const subscribeSession = (f: () => void) => { subs.add(f); return () => { subs.delete(f); }; };
 export function setSession(s: Session) {
   raw = s ? JSON.stringify(s) : null;
   try { if (raw) localStorage.setItem(KEY, raw); else localStorage.removeItem(KEY); } catch { /* ignore */ }

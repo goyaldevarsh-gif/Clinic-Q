@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Pencil, Plus, Trash2 } from 'lucide-react';
 import { newId, store, useStore } from '../../lib/store';
+import { signOutAll } from '../../lib/auth';
 import { setSession } from '../../lib/session';
 import { setLang, useLang, useT } from '../../lib/i18n';
 import { Avatar, Header, Modal } from '../../components/ui';
@@ -30,7 +31,7 @@ export function Profile() {
         </div>))}</div>
       <div className="lbl mt-6">{t('Language')}</div>
       <div className="grid grid-cols-2 gap-1 rounded-xl bg-primary-50 p-1">{(['en', 'hi'] as const).map((l) => <button key={l} onClick={() => setLang(l)} className={`rounded-lg py-2 text-sm font-bold ${lang === l ? 'bg-white text-primary-dark shadow-sm' : 'text-ink-2'}`}>{l === 'en' ? 'English' : 'हिन्दी'}</button>)}</div>
-      <button className="btn-line mt-6 w-full" onClick={() => { setSession(null); nav('/login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
+      <button className="btn-line mt-6 w-full" onClick={() => { signOutAll(); nav('/login', { replace: true }); }}><LogOut size={16} />{t('Log out')}</button>
     </div>
     {edit && <Modal title={members.some((m) => m.id === edit.id) ? t('Edit member') : t('Add family member')} onClose={() => setEdit(null)}>
       <label className="lbl" htmlFor="mn">{t('Name')}</label><input id="mn" className="field" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} autoFocus />

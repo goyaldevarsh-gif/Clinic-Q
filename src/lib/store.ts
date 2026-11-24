@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react';
 import type { Appt, BookInput, Clinic, Member, State, Status } from './types';
 import { BookError, makeAppt, nowHM, validateBooking, ymd } from './slots';
 import { SEED_CLINICS } from './seed';
+import { USE_FB } from './backend';
+import { createFbStore } from './firestoreStore';
 
 /**
  * DEMO store: everything lives in this browser's localStorage.
@@ -30,8 +32,11 @@ if (typeof window !== 'undefined') window.addEventListener('storage', (e) => { i
 
 const uid = () => (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36));
 
-export const store = {
+const demoStore = {
   getState: () => state,
+  watchDay: (_c: string, _d: string, _date: string) => () => {},
+  watchDoctor: (_c: string, _d: string) => () => {},
+  async ensureClinic(_id: string) {},
   subscribe(fn: () => void) { subs.add(fn); return () => { subs.delete(fn); }; },
 
   async book(input: BookInput, now = new Date()): Promise<Appt> {
@@ -89,5 +94,7 @@ export const store = {
   async resetDemo() { commit(fresh()); },
 };
 
+export type Store = typeof demoStore;
+export const store: Store = USE_FB ? (createFbStore() as unknown as Store) : demoStore;
 export const newId = uid;
 export const useStore = () => useSyncExternalStore(store.subscribe, store.getState);
