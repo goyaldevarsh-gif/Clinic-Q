@@ -11,6 +11,20 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci --legacy-peer-deps
+      - run: npm run test:rules
   build:
     runs-on: ubuntu-latest
     steps:
