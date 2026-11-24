@@ -61,4 +61,6 @@ export interface State {
   members: Record<string, Member[]>;
   appts: Appt[];
   records?: ClinicRecord[];
+  /** set when a live query fails (e.g. missing permission), so the UI can say so instead of showing an empty list */
+  loadErr?: string;
 }

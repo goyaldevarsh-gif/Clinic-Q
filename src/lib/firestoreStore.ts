@@ -31,6 +31,8 @@ export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
   let state: State = { clinics: [], members: {}, appts: [] };
   const subs = new Set<() => void>();
   let lastLive = '';
+  let loadErr = '';
+  const fail = (e: unknown) => { loadErr = String((e as { code?: string })?.code ?? e); recompute(); };
 
   const allReal = () => Object.values(realBy).flat();
 
@@ -53,7 +55,7 @@ export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
         }
       }
     }
-    state = { clinics, members, appts: [...real, ...ghosts], records: Object.values(recBy).flat() };
+    state = { clinics, members, appts: [...real, ...ghosts], records: Object.values(recBy).flat(), loadErr: loadErr || undefined };
     subs.forEach((f) => f());
     publishLive();
   }
@@ -95,9 +97,10 @@ export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
       }
     } else {
       const since = ymd(new Date(Date.now() - 30 * 864e5));
-      apptUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'clinics', s.clinicId, 'appts'), F.where('clinicId', '==', s.clinicId), F.where('date', '>=', since)), (snap) => {
-        realBy[s.clinicId] = snap.docs.map((d) => d.data() as Appt); recompute();
-      }, () => {}));
+      // one range filter on one field = no composite index needed (the clinic is already in the path)
+      apptUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'clinics', s.clinicId, 'appts'), F.where('date', '>=', since)), (snap) => {
+        loadErr = ''; realBy[s.clinicId] = snap.docs.map((d) => d.data() as Appt); recompute();
+      }, fail));
     }
   }
 

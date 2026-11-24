@@ -65,6 +65,7 @@ export function Queue() {
             <div className="mt-1 text-[11px] font-bold">{t(x.l)}</div>
           </div>))}
       </div>
+      {st.loadErr && <div className="mx-4 mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{t('Could not load appointments')} ({st.loadErr})</div>}
       {actOk && <div className="mx-4 mt-3 rounded-lg bg-ok-50 px-3 py-2 text-sm font-medium text-ok" role="status">✓ {t('Saved')}</div>}
       {actErr && <div className="mx-4 mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{t('Could not save')} ({actErr})</div>}
       {firstWaiting && (
