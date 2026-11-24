@@ -27,7 +27,7 @@ export function Login() {
   const sendOtp = async () => {
     if (!validPhone(phone)) return setErr(t('Enter a valid 10-digit mobile number'));
     setErr('');
-    if (USE_FB) { setBusy(true); try { await fbSendOtp(phone); } catch { setBusy(false); return setErr(t('Could not send the OTP. Please try again.')); } setBusy(false); }
+    if (USE_FB) { setBusy(true); try { await fbSendOtp(phone); } catch (e) { setBusy(false); return setErr(`${t('Could not send the OTP. Please try again.')} (${(e as { code?: string })?.code ?? 'unknown'})`); } setBusy(false); }
     setStep('otp');
   };
   const verify = async () => {
