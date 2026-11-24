@@ -48,13 +48,11 @@ Why "on arrival" and not "all in the morning": the desk token then means order o
 - **Desk link leaked:** same risk as today; "new link" in MedScript already wipes the old one.
 - **Offline desk write:** same 15-second timeout and clear error the desk uses today.
 
-## Decisions I need from Dr. Goyal
-1. Arrival model: **"Arrived" by staff** (recommended), or all of today's bookings pushed at opening time?
-2. After arrival, should the patient's app show the desk queue number? (recommended: yes)
-3. First version: only your 2 clinics (each with its own desk link), correct?
+## Decisions (decided, built)
+1. Arrival model: **"Arrived" by staff.** Walk-ins are sent to the desk immediately, ordered by arrival time.
+2. Patient app shows "Checked in · Queue no. N" after arrival; before that it says to tell reception the token.
+3. First version: Dr. Goyal's 2 clinics, each with its own desk link, saved on that staff device only.
 
-## Build order once approved
-1. ClinicQ staff screen: paste/scan desk link once (stored on that device only).
-2. "Arrived" button → writes the entry, stores `sentToDesk` + desk doc id.
-3. Seen sync back (staff screen open).
-4. Test with a throw-away desk id first, never the live one.
+## Status
+Built: Arrived button, desk send (never throws; Retry chip on failure), Seen sync back (desk -> ClinicQ, one direction), WhatsApp click-to-send reminder, demo desk (no cloud).
+Tested only against the demo desk. The real desk (orthovault02) must be tried with a throw-away desk id, never the live one.

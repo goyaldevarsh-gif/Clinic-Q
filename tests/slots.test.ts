@@ -76,15 +76,25 @@ describe('booking rules', () => {
 });
 
 describe('queue', () => {
-  it('orders by time then token, and counts people ahead', () => {
+  it('orders by time then token', () => {
     let a: Appt[] = [];
     a = add(a, input({ time: '16:40', name: 'Late', phone: '1' }));
     a = add(a, input({ time: '16:00', name: 'Early', phone: '2' }));
     a = add(a, input({ time: '16:00', name: 'Early2', phone: '3' }));
-    const sorted = [...a].sort(sortQueue).map((x) => x.name);
-    expect(sorted).toEqual(['Early', 'Early2', 'Late']);
-    expect(waitEstimate(a, a[0])).toBe(2);
-    expect(waitEstimate(a, { ...a[0], status: 'seen' })).toBeNull();
+    expect([...a].sort(sortQueue).map((x) => x.name)).toEqual(['Early', 'Early2', 'Late']);
+  });
+  it('counts only patients who have arrived and are still waiting', () => {
+    let a: Appt[] = [];
+    a = add(a, input({ time: '16:40', name: 'Me', phone: '1' }));
+    a = add(a, input({ time: '16:00', name: 'A', phone: '2' }));
+    a = add(a, input({ time: '16:20', name: 'B', phone: '3' }));
+    const [me, pa, pb] = a;
+    expect(waitEstimate(a, me)).toBeNull(); // I have not arrived
+    const meIn = { ...me, arrivedAt: 1 };
+    expect(waitEstimate([meIn, pa, pb], meIn)).toBe(0); // nobody else is here
+    expect(waitEstimate([meIn, { ...pa, arrivedAt: 2 }, pb], meIn)).toBe(1); // A is here, B has not come
+    expect(waitEstimate([meIn, { ...pa, arrivedAt: 2, status: 'seen' }, { ...pb, arrivedAt: 3 }], meIn)).toBe(1); // A already seen
+    expect(waitEstimate([{ ...meIn, status: 'seen' }], { ...meIn, status: 'seen' })).toBeNull();
   });
 });
 

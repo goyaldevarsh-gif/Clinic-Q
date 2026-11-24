@@ -6,7 +6,8 @@ import { fmt12, fmtToken, ymd } from '../../lib/slots';
 import { downloadIcs, shareAppt } from '../../lib/share';
 import { Header, StatusChip } from '../../components/ui';
 import { Qr } from '../../components/Qr';
-import { aheadText, findClinic, findDoctor, queueInfo, usePhone } from './shared';
+import { findClinic, findDoctor, usePhone } from './shared';
+import { QueueStatus } from '../../components/QueueStatus';
 import { dayLabel } from './Home';
 
 export function Confirmed() {
@@ -15,7 +16,6 @@ export function Confirmed() {
   if (!a) return (<><Header title={t('Appointment')} back="/" /><div className="p-8 text-center text-ink-2">{t('Appointment not found.')}</div></>);
   const clinic = findClinic(st, a.clinicId)!; const doc = findDoctor(clinic, a.doctorId);
   const today = a.date === ymd(new Date()) && a.status === 'waiting';
-  const q = today ? queueInfo(st, a) : null;
   return (<>
     <Header title={t('Appointment')} back="/" />
     <div className="px-4 pt-6 text-center">
@@ -37,7 +37,7 @@ export function Confirmed() {
         <div className="flex items-center gap-2"><MapPin size={16} className="text-primary" />{clinic.name}, {clinic.area}, {clinic.city}</div>
         {a.reason && <div className="text-ink-2">{t('Reason')}: {a.reason}</div>}
       </div>
-      {q?.serving && <div className="mt-4 rounded-2xl bg-primary-50 px-4 py-3 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)}<br />{aheadText(t, q.ahead, q.minutes)} ({t('estimate')})</div>}
+      {today && <div className="text-left"><QueueStatus st={st} a={a} /><div className="mt-1 text-[11px] text-ink-2">{t('Waiting time is only an estimate.')}</div></div>}
       {a.status === 'waiting' && (
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button className="btn-soft" onClick={() => downloadIcs(a, clinic, doc?.name ?? '')}><CalendarDays size={16} />{t('Add to calendar')}</button>

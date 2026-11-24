@@ -55,6 +55,14 @@ export const store = {
     commit({ ...state, appts: state.appts.map((a) => (a.id === id && a.status !== 'seen' ? { ...a, status: 'cancelled', cancelledBy: by } : a)) });
   },
 
+  async arrive(id: string, now = new Date()) {
+    commit({ ...state, appts: state.appts.map((a) => (a.id === id && a.status === 'waiting' && !a.arrivedAt ? { ...a, arrivedAt: now.getTime() } : a)) });
+  },
+
+  async patchAppt(id: string, p: Partial<Pick<Appt, 'deskDocId' | 'deskToken' | 'deskErr'>>) {
+    commit({ ...state, appts: state.appts.map((a) => (a.id === id ? { ...a, ...p } : a)) });
+  },
+
   async setStatus(id: string, status: Exclude<Status, 'cancelled'>) {
     commit({ ...state, appts: state.appts.map((a) => (a.id === id && a.status !== 'cancelled' ? { ...a, status } : a)) });
   },
@@ -62,7 +70,7 @@ export const store = {
   async addWalkIn(w: { clinicId: string; doctorId: string; name: string; age: string; phone: string; type: Appt['type'] }, now = new Date()): Promise<Appt> {
     if (!w.name.trim()) throw new BookError('NAME');
     const base: BookInput = { ...w, date: ymd(now), time: nowHM(now) };
-    const a = { ...makeAppt(state.appts, base, uid(), now), walkIn: true };
+    const a = { ...makeAppt(state.appts, base, uid(), now), walkIn: true, arrivedAt: now.getTime() };
     commit({ ...state, appts: [...state.appts, a] });
     return a;
   },

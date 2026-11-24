@@ -40,6 +40,12 @@ export interface Appt {
   walkIn?: boolean;
   cancelledBy?: 'patient' | 'clinic' | 'rescheduled';
   createdAt: number;
+  /** set when staff taps Arrived (walk-ins: when added) */
+  arrivedAt?: number;
+  /** entry in the MedScript reception desk queue, once sent */
+  deskDocId?: string;
+  deskToken?: number;
+  deskErr?: string;
 }
 
 export interface BookInput {

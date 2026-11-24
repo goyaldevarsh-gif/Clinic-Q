@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Phone, RotateCcw, UserPlus, Users, X, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, LogIn, MessageCircle, Phone, RotateCcw, UserPlus, Users, X, XCircle } from 'lucide-react';
 import { store, useStore } from '../../lib/store';
 import { useT } from '../../lib/i18n';
 import { addDays, fmt12, fmtToken, sortQueue, ymd, BookError } from '../../lib/slots';
 import { Avatar, Header, LangToggle, Modal, StatusChip, TokenBadge } from '../../components/ui';
 import type { Appt, ApptType } from '../../lib/types';
 import { useStaffClinic } from './shared';
+import { deskFor, getDeskId } from '../../lib/desk';
+import { arriveAndSend, markSeen, pushToDesk, reminderLink, undoSeen } from './actions';
 import { dayLabel } from '../patient/Home';
 
 export function Queue() {
@@ -19,7 +21,19 @@ export function Queue() {
   const day = st.appts.filter((a) => a.clinicId === clinic.id && a.doctorId === doctor.id && a.date === date).sort(sortQueue);
   const count = (s: Appt['status']) => day.filter((a) => a.status === s).length;
   const rows = day.filter((a) => filter === 'all' || a.status === filter);
-  const firstWaiting = day.find((a) => a.status === 'waiting');
+  const firstWaiting = day.find((a) => a.status === 'waiting' && a.arrivedAt);
+  const deskId = getDeskId(clinic.id);
+
+  // Doctor taps Seen in MedScript → the same patient becomes Seen here (one direction only, so a slow update can never undo a Seen)
+  useEffect(() => {
+    if (!deskId) return;
+    let dead = false; let off = () => {};
+    deskFor(deskId).watch(deskId, (rows) => {
+      if (dead) return;
+      for (const r of rows) { const a = store.getState().appts.find((x) => x.deskDocId === r.docId); if (a && r.status === 'seen' && a.status === 'waiting') store.setStatus(a.id, 'seen'); }
+    }, () => {}).then((u) => { if (dead) u(); else off = u; }).catch(() => {});
+    return () => { dead = true; off(); };
+  }, [deskId]);
   const isToday = date === ymd(new Date());
   const stats = [
     { l: 'Total', n: day.filter((a) => a.status !== 'cancelled').length, c: 'bg-primary-50 text-primary-dark', i: <Users size={16} /> },
@@ -55,7 +69,7 @@ export function Queue() {
             <div className="mt-0.5 flex items-baseline gap-2"><span className="whitespace-nowrap text-3xl font-extrabold">{fmtToken(firstWaiting.token)}</span><span className="min-w-0 truncate text-lg font-bold">{firstWaiting.name}</span></div>
             <div className="truncate text-sm text-white/80">{firstWaiting.walkIn ? 'Walk-in' : fmt12(firstWaiting.time)} · {firstWaiting.type}{firstWaiting.reason ? ` · ${firstWaiting.reason}` : ''}</div>
           </div>
-          <button className="shrink-0 whitespace-nowrap rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-primary-dark" onClick={() => store.setStatus(firstWaiting.id, 'seen')}><Check size={16} className="mr-1 inline" />{t('Seen')}</button>
+          <button className="shrink-0 whitespace-nowrap rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-primary-dark" onClick={() => markSeen(firstWaiting, clinic)}><Check size={16} className="mr-1 inline" />{t('Seen')}</button>
         </div>)}
       <div className="mt-4 flex items-center gap-2">
         <div className="grid flex-1 grid-cols-3 gap-1 rounded-xl bg-primary-50 p-1">{(['all', 'waiting', 'seen'] as const).map((k) => <button key={k} onClick={() => setFilter(k)} className={`rounded-lg py-1.5 text-xs font-bold ${filter === k ? 'bg-white text-primary-dark shadow-sm' : 'text-ink-2'}`}>{k === 'all' ? t('All') : t(k === 'waiting' ? 'Waiting' : 'Seen')}</button>)}</div>
@@ -70,10 +84,21 @@ export function Queue() {
             <div className="min-w-0 flex-1">
               <div className="truncate font-bold">{a.name}{a.age ? <span className="font-medium text-ink-2"> · {a.age}</span> : ''}</div>
               <div className="truncate text-xs text-ink-2">{a.type}{a.reason ? ` · ${a.reason}` : ''}</div>
-              <div className="mt-1 flex items-center gap-2"><StatusChip s={a.status} />{a.phone && <a href={`tel:${a.phone}`} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-dark"><Phone size={12} />{a.phone}</a>}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5"><StatusChip s={a.status} />
+                {a.status === 'waiting' && a.arrivedAt && <span className="chip bg-primary-50 text-primary-dark">✓ {t('Checked in')}</span>}
+                {a.deskToken ? <span className="chip bg-violet-50 text-violet-700">{t('Desk')} {a.deskToken}</span> : null}
+                {a.deskErr && !a.deskDocId && <button className="chip bg-bad-50 text-bad" title={a.deskErr} onClick={() => pushToDesk(a.id, clinic)}>{t('Desk failed · retry')}</button>}
+                {a.phone && <a href={`tel:${a.phone}`} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-dark"><Phone size={12} />{a.phone}</a>}</div>
+              {a.deskErr && !a.deskDocId && <div className="mt-1 text-[11px] text-bad">{a.deskErr}</div>}
             </div>
-            {a.status === 'waiting' && <div className="flex flex-col gap-1.5"><button className="btn-soft !px-3 !py-1.5 text-xs" onClick={() => store.setStatus(a.id, 'seen')}><Check size={14} />{t('Seen')}</button><button className="btn-bad !px-3 !py-1.5 text-xs" onClick={() => setCancel(a)}><X size={14} />{t('Cancel')}</button></div>}
-            {a.status === 'seen' && <button className="rounded-full p-2 text-ink-2 hover:bg-slate-100" aria-label="Undo seen" onClick={() => store.setStatus(a.id, 'waiting')}><RotateCcw size={16} /></button>}
+            {a.status === 'waiting' && <div className="flex flex-col gap-1.5">
+              {!a.arrivedAt && <button className="btn-primary !px-3 !py-1.5 text-xs" onClick={() => arriveAndSend(a, clinic)}><LogIn size={14} />{t('Arrived')}</button>}
+              {a.arrivedAt && <button className="btn-soft !px-3 !py-1.5 text-xs" onClick={() => markSeen(a, clinic)}><Check size={14} />{t('Seen')}</button>}
+              <div className="flex gap-1.5">
+                {!a.arrivedAt && a.phone && !a.walkIn && <a className="btn-soft !px-2.5 !py-1.5 text-xs" aria-label={t('Remind on WhatsApp')} title={t('Remind on WhatsApp')} href={reminderLink(a, clinic, doctor.name)} target="_blank" rel="noreferrer"><MessageCircle size={14} /></a>}
+                <button className="btn-bad !px-2.5 !py-1.5 text-xs" aria-label={t('Cancel')} onClick={() => setCancel(a)}><X size={14} />{a.arrivedAt ? t('Cancel') : ''}</button>
+              </div></div>}
+            {a.status === 'seen' && <button className="rounded-full p-2 text-ink-2 hover:bg-slate-100" aria-label="Undo seen" onClick={() => undoSeen(a, clinic)}><RotateCcw size={16} /></button>}
           </div>))}
       </div>
     </div>
@@ -90,7 +115,7 @@ function WalkIn({ clinicId, doctorId, dressing, onClose }: { clinicId: string; d
   const [name, setName] = useState(''); const [age, setAge] = useState(''); const [phone, setPhone] = useState(''); const [type, setType] = useState<ApptType>('OPD'); const [err, setErr] = useState('');
   const add = async () => {
     if (phone && !/^[6-9]\d{9}$/.test(phone)) return setErr(t('Mobile number should be 10 digits (or leave it empty)'));
-    try { await store.addWalkIn({ clinicId, doctorId, name, age: age.trim(), phone, type }); onClose(); } catch (e) { setErr(e instanceof BookError && e.code === 'NAME' ? t('Please enter the patient name') : t('Could not add')); }
+    try { const a = await store.addWalkIn({ clinicId, doctorId, name, age: age.trim(), phone, type }); onClose(); const c = store.getState().clinics.find((x) => x.id === clinicId); if (c) pushToDesk(a.id, c); } catch (e) { setErr(e instanceof BookError && e.code === 'NAME' ? t('Please enter the patient name') : t('Could not add')); }
   };
   return (
     <Modal title={t('Add walk-in')} onClose={onClose}>

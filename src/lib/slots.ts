@@ -82,11 +82,10 @@ export function makeAppt(appts: Appt[], input: BookInput, id: string, now: Date)
   return { ...input, id, token: nextToken(appts, input.clinicId, input.doctorId, input.date), status: 'waiting', createdAt: now.getTime() };
 }
 
-/** Rough minutes until this patient is called (today only): people waiting ahead × average minutes per patient. */
+/** People who are physically at the clinic (Arrived), still waiting, and ahead of this patient. null = not waiting or not arrived yet. */
 export function waitEstimate(appts: Appt[], me: Appt): number | null {
-  if (me.status !== 'waiting') return null;
-  const ahead = appts.filter((a) => a.clinicId === me.clinicId && a.doctorId === me.doctorId && a.date === me.date && a.status === 'waiting' && a.id !== me.id && sortQueue(a, me) < 0).length;
-  return ahead;
+  if (me.status !== 'waiting' || !me.arrivedAt) return null;
+  return appts.filter((a) => a.clinicId === me.clinicId && a.doctorId === me.doctorId && a.date === me.date && a.status === 'waiting' && !!a.arrivedAt && a.id !== me.id && sortQueue(a, me) < 0).length;
 }
 
 export function validateSchedule(s: Schedule): string | null {

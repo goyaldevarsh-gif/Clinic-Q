@@ -41,10 +41,10 @@ export const isUpcoming = (a: Appt, now = new Date()) => a.status === 'waiting' 
 /** Live queue facts for a waiting appointment on its day. */
 export function queueInfo(st: State, a: Appt) {
   const day = st.appts.filter((x) => x.clinicId === a.clinicId && x.doctorId === a.doctorId && x.date === a.date && x.status !== 'cancelled').sort(sortQueue);
-  const waiting = day.filter((x) => x.status === 'waiting');
-  const serving = waiting[0];
-  const ahead = waiting.findIndex((x) => x.id === a.id);
+  const here = day.filter((x) => x.status === 'waiting' && x.arrivedAt); // only people who are physically at the clinic
+  const serving = here[0];
+  const ahead = here.findIndex((x) => x.id === a.id);
   const doc = findDoctor(findClinic(st, a.clinicId), a.doctorId);
   const avg = doc ? doc.schedule.slotMinutes / Math.max(1, doc.schedule.perSlot) : 10;
-  return { serving, ahead: Math.max(0, ahead), minutes: Math.round((Math.max(0, ahead) * avg) / 5) * 5, hasSlots: doc ? slotTimes(doc.schedule, a.date).length > 0 : true };
+  return { serving, arrived: !!a.arrivedAt, deskToken: a.deskToken, ahead: Math.max(0, ahead), minutes: Math.round((Math.max(0, ahead) * avg) / 5) * 5, hasSlots: doc ? slotTimes(doc.schedule, a.date).length > 0 : true };
 }

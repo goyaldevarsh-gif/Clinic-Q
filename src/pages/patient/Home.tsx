@@ -5,7 +5,8 @@ import { locale, useT } from '../../lib/i18n';
 import { fmt12, fmtToken, parseYmd, ymd } from '../../lib/slots';
 import { Avatar, Header, LangToggle, Logo } from '../../components/ui';
 import { ClinicIllustration } from '../../components/Illustration';
-import { aheadText, findClinic, findDoctor, isUpcoming, myAppts, queueInfo, usePhone } from './shared';
+import { findClinic, findDoctor, isUpcoming, myAppts, usePhone } from './shared';
+import { QueueStatus } from '../../components/QueueStatus';
 
 export const dayLabel = (d: string) => parseYmd(d).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -14,7 +15,7 @@ export function Home() {
   const me = (st.members[phone] ?? []).find((m) => m.relation === 'self');
   const up = myAppts(st, phone).filter((a) => isUpcoming(a)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
   const clinic = up && findClinic(st, up.clinicId); const doc = up && findDoctor(clinic, up.doctorId);
-  const q = up && up.date === ymd(new Date()) ? queueInfo(st, up) : null;
+  const today = !!up && up.date === ymd(new Date());
   const tiles = [
     { to: '/book', label: 'Book', icon: <CalendarPlus size={22} />, bg: 'bg-primary-100 text-primary-dark' },
     { to: '/visits', label: 'Visits', icon: <ListChecks size={22} />, bg: 'bg-accent-50 text-[#14867B]' },
@@ -36,7 +37,7 @@ export function Home() {
             <div className="text-right"><div className="text-[10px] font-bold uppercase text-white/70">{t('Token')}</div><div className="text-3xl font-extrabold leading-none">{fmtToken(up.token)}</div></div>
           </div>
           <div className="mt-4 space-y-1.5 text-sm font-medium"><div className="flex items-center gap-2"><Clock size={15} className="text-white/80" />{dayLabel(up.date)} · {fmt12(up.time)}</div><div className="flex items-center gap-2"><MapPin size={15} className="text-white/80" />{clinic.name}, {clinic.area}</div></div>
-          {q?.serving && <div className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)} · {aheadText(t, q.ahead, q.minutes)}</div>}
+          {today && <QueueStatus st={st} a={up} tone="dark" />}
           <div className="mt-4 grid grid-cols-2 gap-2"><button className="rounded-xl bg-white py-2.5 text-sm font-bold text-primary-dark" onClick={() => nav(`/confirmed/${up.id}`)}>{t('View details')}</button><button className="rounded-xl border border-white/40 py-2.5 text-sm font-bold text-white" onClick={() => nav(`/book?reschedule=${up.id}`)}>{t('Reschedule')}</button></div>
         </div>
       ) : (
