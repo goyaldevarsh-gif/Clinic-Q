@@ -21,7 +21,7 @@ const memberKey = (i: { memberId?: string; name: string }) => i.memberId || 'x' 
 type DayDoc = { last: number; slots: Record<string, number> };
 type LiveRow = { t: number; time: string };
 
-export function createFbStore() {
+export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
   let clinics: Clinic[] = [];
   let members: Record<string, Member[]> = {};
   const realBy: Record<string, Appt[]> = {};
@@ -71,7 +71,7 @@ export function createFbStore() {
     }
     for (const k of Object.keys(out)) out[k].sort((x, y) => x.time.localeCompare(y.time) || x.t - y.t);
     const sig = JSON.stringify(out); if (sig === lastLive) return; lastLive = sig;
-    try { const { db, F } = await sdk(); await Promise.all(Object.entries(out).map(([k, rows]) => F.setDoc(F.doc(db, 'clinics', s.clinicId, 'live', k), { arrived: rows }))); } catch { lastLive = ''; }
+    try { const { db, F } = await getSdk(); await Promise.all(Object.entries(out).map(([k, rows]) => F.setDoc(F.doc(db, 'clinics', s.clinicId, 'live', k), { arrived: rows }))); } catch { lastLive = ''; }
   }
 
   /* ---- subscriptions ---- */
@@ -84,7 +84,7 @@ export function createFbStore() {
     for (const k of Object.keys(realBy)) delete realBy[k];
     for (const k of Object.keys(recBy)) delete recBy[k];
     const s = getSession(); if (!s) { recompute(); return; }
-    const { db, F } = await sdk();
+    const { db, F } = await getSdk();
     if (s.role === 'patient') {
       apptUnsubs.push(F.onSnapshot(F.collection(db, 'patients', s.phone, 'members'), (snap) => { members = { [s.phone]: snap.docs.map((d) => d.data() as Member) }; recompute(); }, () => {}));
       for (const c of clinics) {
@@ -102,7 +102,7 @@ export function createFbStore() {
   }
 
   async function init() {
-    const { db, auth, A, F } = await sdk();
+    const { db, auth, A, F } = await getSdk();
     unsubs.push(F.onSnapshot(F.collection(db, 'clinics'), (snap) => {
       const next = snap.docs.map((d) => ({ ...(d.data() as Clinic), id: d.id }));
       const sig = (l: Clinic[]) => l.map((c) => c.id + (c.shareRecords ? '+' : '')).join();
@@ -133,7 +133,7 @@ export function createFbStore() {
     const cur = watches.get(k);
     if (cur) { cur.n++; return () => { cur.n--; }; }
     const entry = { n: 1, off: () => {} }; watches.set(k, entry);
-    sdk().then(({ db, F }) => {
+    getSdk().then(({ db, F }) => {
       const id = `${doctorId}_${date}`;
       const u1 = F.onSnapshot(F.doc(db, 'clinics', clinicId, 'days', id), (s) => { if (s.exists()) days[k] = s.data() as DayDoc; else delete days[k]; recompute(); }, () => {});
       const u2 = F.onSnapshot(F.doc(db, 'clinics', clinicId, 'live', id), (s) => { live[k] = s.exists() ? (s.data().arrived as LiveRow[]) : []; recompute(); }, () => {});
@@ -149,7 +149,7 @@ export function createFbStore() {
     if (cur) { cur.n++; return () => { cur.n--; }; }
     const entry = { n: 1, off: () => {} }; watches.set(k, entry);
     const from = ymd(new Date()); const to = ymd(new Date(Date.now() + 16 * 864e5));
-    sdk().then(({ db, F }) => {
+    getSdk().then(({ db, F }) => {
       entry.off = F.onSnapshot(F.query(F.collection(db, 'clinics', clinicId, 'days'), F.where(F.documentId(), '>=', `${doctorId}_${from}`), F.where(F.documentId(), '<=', `${doctorId}_${to}`)), (snap) => {
         for (const key of Object.keys(days)) if (key.startsWith(`${clinicId}|${doctorId}|`)) delete days[key];
         for (const d of snap.docs) days[`${clinicId}|${doctorId}|${d.id.slice(doctorId.length + 1)}`] = d.data() as DayDoc;
@@ -166,7 +166,7 @@ export function createFbStore() {
     const cap = clinic.doctors.find((d) => d.id === input.doctorId)!.schedule.perSlot;
     const old = oldId ? allReal().find((a) => a.id === oldId) : undefined;
     const id = uid(); const mk = memberKey(input);
-    const { db, F } = await sdk();
+    const { db, F } = await getSdk();
     const col = (...p: string[]) => F.doc(db, 'clinics', input.clinicId, ...(p as [string, ...string[]]));
     const dayRef = col('days', `${input.doctorId}_${input.date}`);
     const peopleRef = F.doc(dayRef, 'people', `${input.phone}_${mk}`);
@@ -203,7 +203,7 @@ export function createFbStore() {
   }
 
   const upd = async (a: Appt, p: Record<string, unknown>) => {
-    const { db, F } = await sdk();
+    const { db, F } = await getSdk();
     await F.updateDoc(F.doc(db, 'clinics', a.clinicId, 'appts', a.id), p);
   };
   const find = (id: string) => allReal().find((a) => a.id === id);
@@ -222,7 +222,7 @@ export function createFbStore() {
 
     async cancel(id: string, by: 'patient' | 'clinic') {
       const a = find(id); if (!a || a.status === 'seen' || a.status === 'cancelled') return;
-      const { db, F } = await sdk();
+      const { db, F } = await getSdk();
       const dayRef = F.doc(db, 'clinics', a.clinicId, 'days', `${a.doctorId}_${a.date}`);
       await F.runTransaction(db, async (tx) => {
         const snap = a.walkIn ? null : await tx.get(dayRef);
@@ -238,7 +238,7 @@ export function createFbStore() {
 
     async addWalkIn(w: { clinicId: string; doctorId: string; name: string; age: string; phone: string; type: Appt['type'] }, now = new Date()): Promise<Appt> {
       if (!w.name.trim()) throw new BookError('NAME');
-      const { db, F } = await sdk(); const date = ymd(now); const id = uid();
+      const { db, F } = await getSdk(); const date = ymd(now); const id = uid();
       const dayRef = F.doc(db, 'clinics', w.clinicId, 'days', `${w.doctorId}_${date}`);
       return F.runTransaction(db, async (tx) => {
         const snap = await tx.get(dayRef);
@@ -251,13 +251,13 @@ export function createFbStore() {
     },
 
     async saveClinic(c: Clinic) {
-      const { db, F } = await sdk();
+      const { db, F } = await getSdk();
       const caps = Object.fromEntries(c.doctors.map((d) => [d.id, d.schedule.perSlot]));
       await F.setDoc(F.doc(db, 'clinics', c.id), clean({ ...c, caps }));
     },
     /** first staff sign-in: create the clinic document from the built-in template if it does not exist yet */
     async ensureClinic(clinicId: string) {
-      const { db, F } = await sdk();
+      const { db, F } = await getSdk();
       const ref = F.doc(db, 'clinics', clinicId);
       if ((await F.getDoc(ref)).exists()) return;
       const seed = SEED_CLINICS.find((c) => c.id === clinicId);
@@ -267,10 +267,10 @@ export function createFbStore() {
       await this.saveClinic(seed ?? { id: clinicId, name: 'My Clinic', area: '', city: 'Jaipur', doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: '', schedule: { days, slotMinutes: 15, perSlot: 2, dressing: true } }] });
     },
 
-    async saveMember(phone: string, m: Member) { const { db, F } = await sdk(); await F.setDoc(F.doc(db, 'patients', phone, 'members', m.id), clean(m)); },
+    async saveMember(phone: string, m: Member) { const { db, F } = await getSdk(); await F.setDoc(F.doc(db, 'patients', phone, 'members', m.id), clean(m)); },
     async removeMember(phone: string, id: string) {
       const m = (members[phone] ?? []).find((x) => x.id === id); if (!m || m.relation === 'self') return;
-      const { db, F } = await sdk(); await F.deleteDoc(F.doc(db, 'patients', phone, 'members', id));
+      const { db, F } = await getSdk(); await F.deleteDoc(F.doc(db, 'patients', phone, 'members', id));
     },
     async resetDemo() { /* not available on the real backend */ },
   };

@@ -24,7 +24,13 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci --legacy-peer-deps
-      - run: npm run test:rules
+      - name: Rules + store tests (emulator)
+        run: |
+          set +e
+          npm run test:rules > rules-out.txt 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then grep -E "FAIL|Error|expected|received|timed out|✗|×|rejected|Assertion" rules-out.txt | head -25 | sed 's/^/::error::/'; fi
+          exit $code
   build:
     runs-on: ubuntu-latest
     steps:
