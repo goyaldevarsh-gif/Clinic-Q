@@ -261,7 +261,10 @@ export function createFbStore() {
       const ref = F.doc(db, 'clinics', clinicId);
       if ((await F.getDoc(ref)).exists()) return;
       const seed = SEED_CLINICS.find((c) => c.id === clinicId);
-      if (seed) await this.saveClinic(seed);
+      // any other id → a blank starter clinic; name, doctor and timings are edited in Settings / Slots
+      const days: Record<number, { start: string; end: string }[]> = {};
+      for (let d = 1; d <= 6; d++) days[d] = [{ start: '10:00', end: '13:00' }];
+      await this.saveClinic(seed ?? { id: clinicId, name: 'My Clinic', area: '', city: 'Jaipur', doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: '', schedule: { days, slotMinutes: 15, perSlot: 2, dressing: true } }] });
     },
 
     async saveMember(phone: string, m: Member) { const { db, F } = await sdk(); await F.setDoc(F.doc(db, 'patients', phone, 'members', m.id), clean(m)); },
