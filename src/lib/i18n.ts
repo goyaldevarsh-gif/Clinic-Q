@@ -199,6 +199,7 @@ const HI: Record<string, string> = {
   'I have read and accept the': 'मैंने पढ़ लिया है और स्वीकार करता/करती हूँ',
   'Share prescriptions with patients': 'मरीज़ों के साथ प्रिस्क्रिप्शन साझा करें',
   'Off by default. When on, records you publish appear in the patient app, only for the mobile number they were issued to.': 'डिफ़ॉल्ट रूप से बंद। चालू होने पर आपके प्रकाशित रिकॉर्ड मरीज़ के ऐप में दिखेंगे, सिर्फ उसी मोबाइल नंबर को जिसके लिए बने हैं।',
+  'Could not save': 'सेव नहीं हो सका',
 };
 export const getLang = () => lang;
 export const locale = () => (lang === 'hi' ? 'hi-IN' : 'en-IN');
