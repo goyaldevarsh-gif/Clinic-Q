@@ -7,6 +7,7 @@ import { Confirmed } from './pages/patient/Confirmed';
 import { Visits } from './pages/patient/Visits';
 import { Records } from './pages/patient/Records';
 import { Profile } from './pages/patient/Profile';
+import { Privacy } from './pages/Privacy';
 import { StaffLayout } from './pages/staff/shared';
 import { Queue } from './pages/staff/Queue';
 import { Slots } from './pages/staff/Slots';
@@ -19,6 +20,7 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/staff-login" element={<StaffLogin />} />
         <Route path="/c/:id" element={<ClinicLink />} />
         <Route element={<PatientLayout />}>

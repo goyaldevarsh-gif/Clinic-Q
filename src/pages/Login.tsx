@@ -20,6 +20,7 @@ export function Login() {
   const [err, setErr] = useState('');
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
+  const [agree, setAgree] = useState(false);
   const next = sp.get('next') || '/';
 
   const [busy, setBusy] = useState(false);
@@ -39,7 +40,8 @@ export function Login() {
   };
   const finish = async () => {
     if (!name.trim()) return setErr(t('Please enter your name'));
-    await store.saveMember(phone, { id: newId(), name: name.trim(), age: age.trim(), relation: 'self' });
+    if (!agree) return setErr(t('Please accept the privacy notice to continue'));
+    await store.saveMember(phone, { id: newId(), name: name.trim(), age: age.trim(), relation: 'self', consentAt: Date.now() });
     setSession({ role: 'patient', phone }); nav(next, { replace: true });
   };
 
@@ -75,11 +77,13 @@ export function Login() {
             <input id="nm" className="field" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
             <label className="lbl mt-3" htmlFor="ag">{t('Age')}</label>
             <input id="ag" className="field" inputMode="numeric" placeholder="e.g. 34" value={age} onChange={(e) => setAge(e.target.value)} />
+            <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} /><span>{t('I have read and accept the')} <Link to="/privacy" className="font-semibold text-primary-dark underline">{t('Privacy notice')}</Link></span></label>
             <button className="btn-primary mt-4 w-full" onClick={finish}>{t('Continue')}</button>
           </>)}
           {err && <div className="mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{err}</div>}
         </div>
 
+        <Link to="/privacy" className="mt-4 block text-center text-xs font-semibold text-ink-2 underline">{t('Privacy notice')}</Link>
         <Link to="/staff-login" className="mt-6 inline-flex items-center justify-center gap-2 text-sm font-semibold text-primary-dark"><Stethoscope size={16} />{t('Clinic staff? Sign in here')}</Link>
       </div>
     </div>

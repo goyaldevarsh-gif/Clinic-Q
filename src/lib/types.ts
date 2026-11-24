@@ -15,10 +15,13 @@ export interface Schedule {
 
 export interface Doctor { id: string; name: string; qualification: string; speciality: string; schedule: Schedule }
 
-export interface Clinic { id: string; name: string; area: string; city: string; doctors: Doctor[] }
+export interface Clinic { id: string; name: string; area: string; city: string; doctors: Doctor[]; /** clinic chooses to share finished prescriptions with the patient's number (default off) */ shareRecords?: boolean }
+
+/** A record the clinic chose to share (e.g. a finished prescription). Visible only to the phone number it was issued to. */
+export interface ClinicRecord { id: string; clinicId: string; phone: string; name: string; doctorName: string; date: string; title: string; body: string; createdAt: number }
 
 export type Relation = 'self' | 'spouse' | 'child' | 'parent' | 'other';
-export interface Member { id: string; name: string; age: string; relation: Relation }
+export interface Member { id: string; name: string; age: string; relation: Relation; /** when the patient accepted the privacy notice (self profile only) */ consentAt?: number }
 
 export interface Appt {
   id: string;
@@ -57,4 +60,5 @@ export interface State {
   clinics: Clinic[];
   members: Record<string, Member[]>;
   appts: Appt[];
+  records?: ClinicRecord[];
 }

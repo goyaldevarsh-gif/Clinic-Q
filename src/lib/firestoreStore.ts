@@ -1,4 +1,4 @@
-import type { Appt, BookInput, Clinic, Member, State, Status } from './types';
+import type { Appt, BookInput, Clinic, ClinicRecord, Member, State, Status } from './types';
 import { BookError, nowHM, validateBooking, ymd } from './slots';
 import { getSession, setSession, subscribeSession } from './session';
 import { SEED_CLINICS } from './seed';
@@ -25,6 +25,7 @@ export function createFbStore() {
   let clinics: Clinic[] = [];
   let members: Record<string, Member[]> = {};
   const realBy: Record<string, Appt[]> = {};
+  const recBy: Record<string, ClinicRecord[]> = {};
   const days: Record<string, DayDoc> = {};
   const live: Record<string, LiveRow[]> = {};
   let state: State = { clinics: [], members: {}, appts: [] };
@@ -52,7 +53,7 @@ export function createFbStore() {
         }
       }
     }
-    state = { clinics, members, appts: [...real, ...ghosts] };
+    state = { clinics, members, appts: [...real, ...ghosts], records: Object.values(recBy).flat() };
     subs.forEach((f) => f());
     publishLive();
   }
@@ -81,6 +82,7 @@ export function createFbStore() {
   async function bindAppts() {
     apptUnsubs.forEach((u) => u()); apptUnsubs = [];
     for (const k of Object.keys(realBy)) delete realBy[k];
+    for (const k of Object.keys(recBy)) delete recBy[k];
     const s = getSession(); if (!s) { recompute(); return; }
     const { db, F } = await sdk();
     if (s.role === 'patient') {
@@ -89,6 +91,7 @@ export function createFbStore() {
         apptUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'clinics', c.id, 'appts'), F.where('phone', '==', s.phone)), (snap) => {
           realBy[c.id] = snap.docs.map((d) => d.data() as Appt); autoWatch(); recompute();
         }, () => {}));
+        if (c.shareRecords) apptUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'clinics', c.id, 'records'), F.where('phone', '==', s.phone)), (snap) => { recBy[c.id] = snap.docs.map((d) => d.data() as ClinicRecord); recompute(); }, () => {}));
       }
     } else {
       const since = ymd(new Date(Date.now() - 30 * 864e5));
@@ -102,7 +105,8 @@ export function createFbStore() {
     const { db, auth, A, F } = await sdk();
     unsubs.push(F.onSnapshot(F.collection(db, 'clinics'), (snap) => {
       const next = snap.docs.map((d) => ({ ...(d.data() as Clinic), id: d.id }));
-      const changed = next.map((c) => c.id).join() !== clinics.map((c) => c.id).join();
+      const sig = (l: Clinic[]) => l.map((c) => c.id + (c.shareRecords ? '+' : '')).join();
+      const changed = sig(next) !== sig(clinics);
       clinics = next; recompute(); if (changed && getSession()?.role === 'patient') bindAppts();
     }, () => {}));
     A.onAuthStateChanged(auth, (u) => {

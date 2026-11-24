@@ -113,6 +113,23 @@ describe('live queue list', () => {
   });
 });
 
+describe('shared records', () => {
+  const rec = { clinicId: C, phone: A, name: 'Amit', title: 'Prescription', body: 'x', date: DATE, doctorName: 'Dr', createdAt: 1 };
+  beforeEach(async () => { await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'clinics', C, 'records', 'r1'), rec); }); });
+  it('hidden while the clinic has sharing off', async () => { await assertFails(getDoc(doc(patient(A), 'clinics', C, 'records', 'r1'))); });
+  it('visible to the owner only once sharing is on', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'clinics', C), { name: 'Mittal', caps: {}, shareRecords: true }); });
+    await assertSucceeds(getDoc(doc(patient(A), 'clinics', C, 'records', 'r1')));
+    await assertFails(getDoc(doc(patient(B), 'clinics', C, 'records', 'r1')));
+    await assertFails(getDoc(doc(anon(), 'clinics', C, 'records', 'r1')));
+  });
+  it('only own clinic staff can publish', async () => {
+    await assertSucceeds(setDoc(doc(staff('staffMittal'), 'clinics', C, 'records', 'r2'), rec));
+    await assertFails(setDoc(doc(staff('staffOther'), 'clinics', C, 'records', 'r3'), rec));
+    await assertFails(setDoc(doc(patient(A), 'clinics', C, 'records', 'r4'), rec));
+  });
+});
+
 describe('privacy of appointments', () => {
   beforeEach(async () => { await seed(A, 'a1'); });
   it('owner reads own appointment', async () => { await assertSucceeds(getDoc(doc(patient(A), 'clinics', C, 'appts', 'a1'))); });

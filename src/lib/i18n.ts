@@ -193,6 +193,12 @@ const HI: Record<string, string> = {
   'Could not sign in. Check email and password.': 'साइन-इन नहीं हुआ। ईमेल और पासवर्ड जाँचें।',
   'Email': 'ईमेल',
   'Password': 'पासवर्ड',
+  'Privacy notice': 'गोपनीयता सूचना',
+  'Questions or deletion requests': 'सवाल या डेटा हटाने का अनुरोध',
+  'Please accept the privacy notice to continue': 'आगे बढ़ने के लिए गोपनीयता सूचना स्वीकार करें',
+  'I have read and accept the': 'मैंने पढ़ लिया है और स्वीकार करता/करती हूँ',
+  'Share prescriptions with patients': 'मरीज़ों के साथ प्रिस्क्रिप्शन साझा करें',
+  'Off by default. When on, records you publish appear in the patient app, only for the mobile number they were issued to.': 'डिफ़ॉल्ट रूप से बंद। चालू होने पर आपके प्रकाशित रिकॉर्ड मरीज़ के ऐप में दिखेंगे, सिर्फ उसी मोबाइल नंबर को जिसके लिए बने हैं।',
 };
 export const getLang = () => lang;
 export const locale = () => (lang === 'hi' ? 'hi-IN' : 'en-IN');

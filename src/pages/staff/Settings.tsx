@@ -37,6 +37,10 @@ export function Settings() {
         <button className="btn-primary mt-4 w-full" onClick={save}>{saved ? <><Check size={16} />{t('Saved')}</> : t('Save')}</button>
       </div>
       <div className="card p-4">
+        <label className="flex items-start gap-3"><input type="checkbox" className="mt-1" checked={!!c0.shareRecords} onChange={(e) => store.saveClinic({ ...c0, shareRecords: e.target.checked })} />
+          <span><span className="font-bold">{t('Share prescriptions with patients')}</span><span className="mt-1 block text-xs text-ink-2">{t('Off by default. When on, records you publish appear in the patient app, only for the mobile number they were issued to.')}</span></span></label>
+      </div>
+      <div className="card p-4">
         <div className="font-bold">{t('Reception desk (MedScript)')}</div>
         <p className="mt-1 text-xs text-ink-2">{t('When you tap Arrived, the patient goes into your MedScript waiting list. The desk link is saved on this device only.')}</p>
         {deskId ? (
