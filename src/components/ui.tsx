@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChevronLeft, X } from 'lucide-react';
+import { Check, ChevronLeft, X } from 'lucide-react';
 import type { Status } from '../lib/types';
 import { fmtToken } from '../lib/slots';
 import { useT, setLang, useLang } from '../lib/i18n';
@@ -67,8 +67,10 @@ export function TabBar({ items }: { items: { to: string; label: string; icon: Re
     <nav className="safe-b fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white">
       <div className="mx-auto flex max-w-xl">
         {items.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold ${isActive ? 'text-primary-dark' : 'text-ink-2'}`}>
-            {i.icon}{t(i.label)}
+          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `group flex flex-1 flex-col items-center gap-0.5 pb-2 pt-1.5 text-[11px] font-semibold ${isActive ? 'text-primary-dark' : 'text-ink-2'}`}>
+            {({ isActive }) => (<>
+              <span className={`rounded-full px-4 py-1 transition ${isActive ? 'bg-primary-100' : ''}`}>{i.icon}</span>{t(i.label)}
+            </>)}
           </NavLink>
         ))}
       </div>
@@ -78,4 +80,23 @@ export function TabBar({ items }: { items: { to: string; label: string; icon: Re
 
 export function Empty({ icon, title, text }: { icon: ReactNode; title: string; text?: string }) {
   return <div className="flex flex-col items-center px-6 py-14 text-center"><div className="mb-3 grid h-16 w-16 place-items-center rounded-full bg-primary-50 text-primary">{icon}</div><div className="font-bold">{title}</div>{text && <p className="mt-1 max-w-xs text-sm text-ink-2">{text}</p>}</div>;
+}
+
+export function Avatar({ name, size = 40, tone = 'blue' }: { name: string; size?: number; tone?: 'blue' | 'teal' | 'white' }) {
+  const ini = name.replace(/^dr\.?\s+/i, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || '?';
+  const bg = tone === 'teal' ? 'bg-gradient-to-br from-accent to-primary text-white' : tone === 'white' ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-primary to-primary-dark text-white';
+  return <span className={`grid shrink-0 place-items-center rounded-full font-bold ${bg}`} style={{ width: size, height: size, fontSize: size * 0.38 }} aria-hidden>{ini}</span>;
+}
+
+export function Stepper({ step, labels }: { step: number; labels: string[] }) {
+  return (
+    <ol className="flex items-start px-6 pt-4" aria-label="Progress">
+      {labels.map((l, i) => { const n = i + 1; const done = n < step; const on = n === step; return (
+        <li key={l} className="relative flex flex-1 flex-col items-center">
+          {i > 0 && <span className={`absolute right-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${n <= step ? 'bg-primary-dark' : 'bg-primary-100'}`} />}
+          <span className={`relative z-10 grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${done ? 'bg-primary-dark text-white' : on ? 'bg-primary-dark text-white ring-4 ring-primary-100' : 'bg-primary-100 text-primary-dark'}`}>{done ? <Check size={14} /> : n}</span>
+          <span className={`mt-1 text-[11px] font-semibold ${on ? 'text-primary-dark' : 'text-ink-2'}`}>{l}</span>
+        </li>); })}
+    </ol>
+  );
 }

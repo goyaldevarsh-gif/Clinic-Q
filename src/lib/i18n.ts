@@ -53,6 +53,7 @@ const HI: Record<string, string> = {
   'Who is this for?': 'यह किसके लिए है?',
   'Reason for visit (optional)': 'आने का कारण (वैकल्पिक)',
   'Family members': 'परिवार के सदस्य',
+  'Family': 'परिवार',
   'Add family member': 'परिवार का सदस्य जोड़ें',
   'Name': 'नाम',
   'Age': 'उम्र',

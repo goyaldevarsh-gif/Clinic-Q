@@ -4,7 +4,7 @@ import { LogOut, Pencil, Plus, Trash2 } from 'lucide-react';
 import { newId, store, useStore } from '../../lib/store';
 import { setSession } from '../../lib/session';
 import { setLang, useLang, useT } from '../../lib/i18n';
-import { Header, Modal } from '../../components/ui';
+import { Avatar, Header, Modal } from '../../components/ui';
 import type { Member, Relation } from '../../lib/types';
 import { usePhone } from './shared';
 
@@ -23,7 +23,7 @@ export function Profile() {
       <div className="mb-2 mt-5 flex items-center justify-between"><div className="lbl !mb-0">{t('Family members')}</div><button className="inline-flex items-center gap-1 text-sm font-bold text-primary-dark" onClick={() => { setEdit({ id: newId(), name: '', age: '', relation: 'spouse' }); setErr(''); }}><Plus size={16} />{t('Add family member')}</button></div>
       <div className="space-y-2">{members.map((m) => (
         <div key={m.id} className="card flex items-center gap-3 p-3">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-100 font-bold text-primary-dark">{m.name[0]?.toUpperCase()}</span>
+          <Avatar name={m.name} size={40} tone={m.relation === 'self' ? 'blue' : 'teal'} />
           <div className="flex-1"><div className="font-semibold">{m.name}</div><div className="text-xs capitalize text-ink-2">{m.relation === 'self' ? 'You' : m.relation}{m.age ? ` · ${m.age}` : ''}</div></div>
           <button className="rounded-full p-2 hover:bg-slate-100" aria-label={`Edit ${m.name}`} onClick={() => { setEdit(m); setErr(''); }}><Pencil size={16} /></button>
           {m.relation !== 'self' && <button className="rounded-full p-2 text-bad hover:bg-bad-50" aria-label={`Remove ${m.name}`} onClick={() => store.removeMember(phone, m.id)}><Trash2 size={16} /></button>}

@@ -1,9 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarPlus, Clock, FileText, MapPin, Users } from 'lucide-react';
+import { CalendarPlus, Clock, FileText, ListChecks, MapPin, Users } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { useT } from '../../lib/i18n';
 import { fmt12, fmtToken, parseYmd, ymd } from '../../lib/slots';
-import { Header, LangToggle, Logo, TokenBadge } from '../../components/ui';
+import { Avatar, Header, LangToggle, Logo } from '../../components/ui';
+import { ClinicIllustration } from '../../components/Illustration';
 import { findClinic, findDoctor, isUpcoming, myAppts, queueInfo, usePhone } from './shared';
 
 export const dayLabel = (d: string) => parseYmd(d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
@@ -14,35 +15,45 @@ export function Home() {
   const up = myAppts(st, phone).filter((a) => isUpcoming(a)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
   const clinic = up && findClinic(st, up.clinicId); const doc = up && findDoctor(clinic, up.doctorId);
   const q = up && up.date === ymd(new Date()) ? queueInfo(st, up) : null;
+  const tiles = [
+    { to: '/book', label: 'Book', icon: <CalendarPlus size={22} />, bg: 'bg-primary-100 text-primary-dark' },
+    { to: '/visits', label: 'Visits', icon: <ListChecks size={22} />, bg: 'bg-accent-50 text-[#14867B]' },
+    { to: '/records', label: 'Records', icon: <FileText size={22} />, bg: 'bg-warn-50 text-warn' },
+    { to: '/profile', label: 'Family', icon: <Users size={22} />, bg: 'bg-ok-50 text-ok' },
+  ];
   return (<>
     <Header title={<Logo size={26} />} right={<LangToggle />} />
-    <div className="px-4 pt-6">
-      <div className="text-2xl font-extrabold">{t('Namaste')}, {me?.name.split(' ')[0] ?? ''} 👋</div>
-      <div className="mt-4">
-        <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-2">{t('Upcoming appointment')}</div>
-        {up && clinic && doc ? (
-          <div className="card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-bold">{doc.name}</div>
-                <div className="text-sm text-ink-2">{up.type} · {up.name}</div>
-              </div>
-              <TokenBadge n={up.token} />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium"><span className="inline-flex items-center gap-1.5"><Clock size={15} className="text-primary" />{dayLabel(up.date)} · {fmt12(up.time)}</span><span className="inline-flex items-center gap-1.5"><MapPin size={15} className="text-primary" />{clinic.name}, {clinic.area}</span></div>
-            {q?.serving && (
-              <div className="mt-3 rounded-xl bg-primary-50 px-3 py-2 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)} · {q.ahead === 0 ? 'You are next' : `${q.ahead} before you · about ${q.minutes} min`}</div>
-            )}
-            <div className="mt-3 flex gap-2"><button className="btn-soft flex-1" onClick={() => nav(`/confirmed/${up.id}`)}>{t('View details')}</button><button className="btn-line flex-1" onClick={() => nav(`/book?reschedule=${up.id}`)}>{t('Reschedule')}</button></div>
+    <div className="px-4 pt-5">
+      <div className="text-[26px] font-extrabold leading-tight">{t('Namaste')}, {me?.name.split(' ')[0] ?? ''} 👋</div>
+      <div className="text-sm text-ink-2">{parseYmd(ymd(new Date())).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+
+      {up && clinic && doc ? (
+        <div className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-5 text-white shadow-card">
+          <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wide text-white/75">{t('Upcoming appointment')}</span><span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">{up.type}</span></div>
+          <div className="mt-3 flex items-center gap-3">
+            <Avatar name={doc.name} size={48} tone="white" />
+            <div className="min-w-0 flex-1"><div className="truncate text-lg font-bold">{doc.name}</div><div className="truncate text-sm text-white/80">For {up.name}</div></div>
+            <div className="text-right"><div className="text-[10px] font-bold uppercase text-white/70">Token</div><div className="text-3xl font-extrabold leading-none">{fmtToken(up.token)}</div></div>
           </div>
-        ) : (
-          <div className="card p-5 text-center text-sm text-ink-2">{t('No upcoming appointment')}</div>
-        )}
-      </div>
-      <Link to="/book" className="btn-primary mt-4 w-full"><CalendarPlus size={18} />{t('Book appointment')}</Link>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Link to="/records" className="card flex items-center gap-3 p-4 text-sm font-bold"><FileText className="text-primary" />{t('Records')}</Link>
-        <Link to="/profile" className="card flex items-center gap-3 p-4 text-sm font-bold"><Users className="text-primary" />{t('Family members')}</Link>
+          <div className="mt-4 space-y-1.5 text-sm font-medium"><div className="flex items-center gap-2"><Clock size={15} className="text-white/80" />{dayLabel(up.date)} · {fmt12(up.time)}</div><div className="flex items-center gap-2"><MapPin size={15} className="text-white/80" />{clinic.name}, {clinic.area}</div></div>
+          {q?.serving && <div className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm"><b>{t('Now serving')}:</b> {fmtToken(q.serving.token)} · {q.ahead === 0 ? 'You are next' : `${q.ahead} before you · ~${q.minutes} min`}</div>}
+          <div className="mt-4 grid grid-cols-2 gap-2"><button className="rounded-xl bg-white py-2.5 text-sm font-bold text-primary-dark" onClick={() => nav(`/confirmed/${up.id}`)}>{t('View details')}</button><button className="rounded-xl border border-white/40 py-2.5 text-sm font-bold text-white" onClick={() => nav(`/book?reschedule=${up.id}`)}>{t('Reschedule')}</button></div>
+        </div>
+      ) : (
+        <div className="card mt-5 overflow-hidden p-5 text-center">
+          <ClinicIllustration className="mx-auto w-48" />
+          <div className="mt-2 font-bold">{t('No upcoming appointment')}</div>
+          <Link to="/book" className="btn-primary mt-3 w-full"><CalendarPlus size={18} />{t('Book appointment')}</Link>
+        </div>
+      )}
+      {up && <Link to="/book" className="btn-soft mt-3 w-full"><CalendarPlus size={18} />{t('Book appointment')}</Link>}
+
+      <div className="mt-5 grid grid-cols-4 gap-2.5">
+        {tiles.map((x) => (
+          <Link key={x.to} to={x.to} className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white px-1 py-3 text-center shadow-card">
+            <span className={`grid h-11 w-11 place-items-center rounded-2xl ${x.bg}`}>{x.icon}</span>
+            <span className="text-[11px] font-bold leading-tight">{t(x.label)}</span>
+          </Link>))}
       </div>
     </div>
   </>);

@@ -5,7 +5,7 @@ import { useStore, store } from '../../lib/store';
 import { useT } from '../../lib/i18n';
 import { BookError, HORIZON_DAYS, addDays, fmt12, parseYmd, slotInfos, ymd } from '../../lib/slots';
 import type { ApptType } from '../../lib/types';
-import { Header } from '../../components/ui';
+import { Avatar, Header, Stepper } from '../../components/ui';
 import { findClinic, findDoctor, usePhone } from './shared';
 import { dayLabel } from './Home';
 
@@ -64,9 +64,7 @@ export function Book() {
 
   return (<>
     <Header title={old ? 'Reschedule' : t('Book appointment')} back />
-    <div className="flex items-center justify-center gap-2 px-4 pt-4">
-      {[1, 2, 3].map((n) => <span key={n} className={`h-1.5 w-12 rounded-full ${n <= step ? 'bg-primary-dark' : 'bg-primary-100'}`} />)}
-    </div>
+    <Stepper step={step} labels={['Clinic', 'Date & time', 'Confirm']} />
     <div className="px-4 pt-4">
       {step === 1 && (<>
         <div className="lbl">{t('Select clinic')}</div>
@@ -82,11 +80,11 @@ export function Book() {
         {clinic && clinic.doctors.length > 1 && (<>
           <div className="lbl mt-5">{t('Select doctor')}</div>
           <div className="space-y-2">{clinic.doctors.map((d) => (
-            <button key={d.id} onClick={() => setDoctorId(d.id)} className={`card flex w-full items-center gap-3 p-4 text-left ${docId === d.id ? '!border-primary ring-2 ring-primary/20' : ''}`}><Stethoscope className="text-primary" size={20} /><div><div className="font-bold">{d.name}</div><div className="text-sm text-ink-2">{d.qualification}</div></div></button>
+            <button key={d.id} onClick={() => setDoctorId(d.id)} className={`card flex w-full items-center gap-3 p-4 text-left ${docId === d.id ? '!border-primary ring-2 ring-primary/20' : ''}`}><Avatar name={d.name} size={40} /><div><div className="font-bold">{d.name}</div><div className="text-sm text-ink-2">{d.qualification}</div></div></button>
           ))}</div>
         </>)}
         {doctor && (<>
-          {clinic && clinic.doctors.length === 1 && <div className="card mt-4 flex items-center gap-3 p-4"><Stethoscope className="text-primary" size={20} /><div><div className="font-bold">{doctor.name}</div><div className="text-sm text-ink-2">{doctor.qualification} · {doctor.speciality}</div></div></div>}
+          {clinic && clinic.doctors.length === 1 && <div className="card mt-4 flex items-center gap-3 p-4"><Avatar name={doctor.name} size={44} /><div><div className="font-bold">{doctor.name}</div><div className="text-sm text-ink-2">{doctor.qualification} · {doctor.speciality}</div></div></div>}
           <div className="lbl mt-5">{t('Visit type')}</div>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setType('OPD')} className={`card flex items-center gap-2 p-3 text-sm font-bold ${type === 'OPD' ? '!border-primary bg-primary-50' : ''}`}><Stethoscope size={18} className="text-primary" />{t('OPD consultation')}</button>
@@ -124,7 +122,7 @@ export function Book() {
         <div className="lbl mt-5">{t('Who is this for?')}</div>
         <div className="space-y-2">{members.map((m) => (
           <button key={m.id} onClick={() => setMemberId(m.id)} className={`card flex w-full items-center gap-3 p-3 text-left ${memberId === m.id ? '!border-primary ring-2 ring-primary/20' : ''}`}>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-100 text-sm font-bold text-primary-dark">{m.name[0]?.toUpperCase()}</span>
+            <Avatar name={m.name} size={36} tone={m.relation === 'self' ? 'blue' : 'teal'} />
             <div className="flex-1"><div className="font-semibold">{m.name}</div><div className="text-xs capitalize text-ink-2">{m.relation === 'self' ? 'You' : m.relation}{m.age ? ` · ${m.age}` : ''}</div></div>
             {memberId === m.id && <Check className="text-primary-dark" size={18} />}
           </button>))}</div>

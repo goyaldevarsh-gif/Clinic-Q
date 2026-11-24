@@ -5,6 +5,7 @@ import { newId, store, useStore } from '../lib/store';
 import { useT } from '../lib/i18n';
 import { DemoBanner, LangToggle, Logo } from '../components/ui';
 import { Stethoscope } from 'lucide-react';
+import { ClinicIllustration } from '../components/Illustration';
 
 export function Login() {
   const t = useT();
@@ -36,11 +37,12 @@ export function Login() {
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
       <DemoBanner />
       <div className="mx-auto flex max-w-md flex-col px-6 pb-10 pt-8">
-        <div className="mb-10 flex items-center justify-between"><Logo size={32} /><LangToggle /></div>
-        <h1 className="text-3xl font-extrabold leading-tight text-primary-dark">{t('Your Clinic, Always With You')}</h1>
-        <p className="mt-2 text-sm text-ink-2">Book appointments · Track your token · Keep your visits in one place</p>
+        <div className="mb-4 flex items-center justify-between"><Logo size={32} /><LangToggle /></div>
+        <ClinicIllustration className="mx-auto mb-4 w-full max-w-[300px]" />
+        <h1 className="text-center text-[28px] font-extrabold leading-tight text-primary-dark">{t('Your Clinic, Always With You')}</h1>
+        <p className="mt-2 text-center text-sm text-ink-2">Book appointments · Track your token · Keep your visits in one place</p>
 
-        <div className="card mt-8 p-5">
+        <div className="card mt-6 p-5">
           {step === 'phone' && (<>
             <label className="lbl" htmlFor="ph">{t('Mobile number')}</label>
             <div className="flex gap-2">

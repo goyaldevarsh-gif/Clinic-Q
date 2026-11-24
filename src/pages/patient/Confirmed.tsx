@@ -4,7 +4,7 @@ import { useStore } from '../../lib/store';
 import { useT } from '../../lib/i18n';
 import { fmt12, fmtToken, ymd } from '../../lib/slots';
 import { downloadIcs, shareAppt } from '../../lib/share';
-import { Header, StatusChip, TokenBadge } from '../../components/ui';
+import { Header, StatusChip } from '../../components/ui';
 import { Qr } from '../../components/Qr';
 import { findClinic, findDoctor, queueInfo, usePhone } from './shared';
 import { dayLabel } from './Home';
@@ -21,12 +21,14 @@ export function Confirmed() {
     <div className="px-4 pt-6 text-center">
       {a.status === 'waiting' && <CheckCircle2 className="mx-auto text-ok" size={52} />}
       <h2 className="mt-2 text-xl font-extrabold">{a.status === 'cancelled' ? 'Appointment cancelled' : a.status === 'seen' ? 'Visit completed' : t('Appointment confirmed!')}</h2>
-      <div className="card mx-auto mt-5 max-w-xs p-5">
-        <div className="text-xs font-bold uppercase tracking-wide text-ink-2">{t('Your token')}</div>
-        <div className="mt-1"><TokenBadge n={a.token} big /></div>
-        <div className="mt-4 flex justify-center"><Qr text={`CQ|${a.clinicId}|${a.doctorId}|${a.date}|${fmtToken(a.token)}`} size={150} /></div>
+      <div className="card mx-auto mt-5 max-w-xs overflow-hidden">
+        <div className="bg-gradient-to-br from-primary to-primary-dark px-5 py-5 text-white">
+          <div className="text-xs font-bold uppercase tracking-wide text-white/75">{t('Your token')}</div>
+          <div className="mt-1 text-6xl font-extrabold tracking-tight">{fmtToken(a.token)}</div>
+        </div>
+        <div className="p-5"><div className="flex justify-center"><Qr text={`CQ|${a.clinicId}|${a.doctorId}|${a.date}|${fmtToken(a.token)}`} size={150} /></div>
         <div className="mt-1 text-[11px] text-ink-2">{t('Show this QR at the clinic')}</div>
-        <div className="mt-3"><StatusChip s={a.status} /></div>
+        <div className="mt-3"><StatusChip s={a.status} /></div></div>
       </div>
       <div className="card mt-4 space-y-2 p-4 text-left text-sm">
         <div className="font-bold">{a.name} <span className="font-medium text-ink-2">· {a.type}</span></div>
