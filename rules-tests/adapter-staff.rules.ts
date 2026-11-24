@@ -4,7 +4,7 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
 import * as F from 'firebase/firestore';
 import { createFbStore } from '../src/lib/firestoreStore';
 import { setSession } from '../src/lib/session';
-import { C, D, TODAY, makeEnv, sdkFor, seedClinic, until } from './helpers';
+import { C, D, TODAY, adminRead, makeEnv, sdkFor, seedClinic, until } from './helpers';
 
 let env: RulesTestEnvironment;
 const A = '9829012345';
@@ -22,7 +22,7 @@ beforeAll(async () => {
 });
 afterAll(async () => { await env.cleanup(); });
 
-const read = (path: string[]) => env.withSecurityRulesDisabled(async (ctx) => (await F.getDoc(F.doc(ctx.firestore(), path[0], ...path.slice(1)))).data());
+const read = (path: string[]) => adminRead(env, path);
 
 describe('staff flow through the real store', () => {
   it('arrive, desk fields, seen, walk-in, live list, cancel, ensureClinic', async () => {

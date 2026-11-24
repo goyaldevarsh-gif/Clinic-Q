@@ -24,3 +24,10 @@ export async function until(cond: () => boolean, ms = 10000) {
   const t0 = Date.now();
   while (!cond()) { if (Date.now() - t0 > ms) throw new Error('timed out waiting for: ' + cond.toString()); await new Promise((r) => setTimeout(r, 50)); }
 }
+
+/** withSecurityRulesDisabled returns nothing, so the value is captured in a variable */
+export async function adminRead(env: RulesTestEnvironment, path: string[]) {
+  let out: Record<string, any> | undefined;
+  await env.withSecurityRulesDisabled(async (ctx) => { out = (await F.getDoc(F.doc(ctx.firestore(), path[0], ...path.slice(1)))).data(); });
+  return out;
+}

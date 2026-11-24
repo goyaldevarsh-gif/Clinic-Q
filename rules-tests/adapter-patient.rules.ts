@@ -1,10 +1,9 @@
 // Runs the REAL store code (src/lib/firestoreStore.ts) as a patient against the emulator with the real rules.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import * as F from 'firebase/firestore';
 import { createFbStore } from '../src/lib/firestoreStore';
 import { setSession } from '../src/lib/session';
-import { C, D, TOMORROW, makeEnv, sdkFor, seedClinic, until } from './helpers';
+import { C, D, TOMORROW, adminRead, makeEnv, sdkFor, seedClinic, until } from './helpers';
 
 let env: RulesTestEnvironment;
 const A = '9829012345', B = '9876543210', X = '9811111111';
@@ -47,7 +46,7 @@ describe('patient flow through the real store', () => {
     // privacy through the store: B's store must never see A's appointments
     expect(sb.getState().appts.filter((a) => a.phone === A)).toHaveLength(0);
 
-    const day = await env.withSecurityRulesDisabled(async (ctx) => (await F.getDoc(F.doc(ctx.firestore(), 'clinics', C, 'days', `${D}_${TOMORROW}`))).data());
+    const day = await adminRead(env, ['clinics', C, 'days', `${D}_${TOMORROW}`]);
     expect(day?.slots['10:00']).toBe(2);   // B + X
     expect(day?.slots['11:00']).toBe(0);
     expect(day?.slots['11:15']).toBe(1);
