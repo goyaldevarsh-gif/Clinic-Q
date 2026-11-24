@@ -204,7 +204,9 @@ export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
 
   const upd = async (a: Appt, p: Record<string, unknown>) => {
     const { db, F } = await getSdk();
-    await F.updateDoc(F.doc(db, 'clinics', a.clinicId, 'appts', a.id), p);
+    const w = F.updateDoc(F.doc(db, 'clinics', a.clinicId, 'appts', a.id), p);
+    // the server normally answers in well under a second; if not, tell the user instead of hanging silently
+    await Promise.race([w, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('no answer from server'), { code: 'timeout' })), 10000))]);
   };
   const find = (id: string) => allReal().find((a) => a.id === id);
 
@@ -232,7 +234,11 @@ export function createFbStore(getSdk: () => Promise<Sdk> = sdk) {
       });
     },
 
-    async arrive(id: string, now = new Date()) { const a = find(id); if (a && a.status === 'waiting' && !a.arrivedAt) await upd(a, { arrivedAt: now.getTime() }); },
+    async arrive(id: string, now = new Date()) {
+      const a = find(id);
+      if (!a) throw Object.assign(new Error('appointment not found in store'), { code: 'not-found' });
+      if (a.status === 'waiting' && !a.arrivedAt) await upd(a, { arrivedAt: now.getTime() });
+    },
     async patchAppt(id: string, p: Partial<Pick<Appt, 'deskDocId' | 'deskToken' | 'deskErr'>>) { const a = find(id); if (a) await upd(a, clean(p)); },
     async setStatus(id: string, status: Exclude<Status, 'cancelled'>) { const a = find(id); if (a && a.status !== 'cancelled') await upd(a, { status }); },
 

@@ -19,7 +19,8 @@ export function Queue() {
   const [cancel, setCancel] = useState<Appt | null>(null);
   const [walk, setWalk] = useState(false);
   const [actErr, setActErr] = useState('');
-  const run = async (f: () => Promise<unknown>) => { try { await f(); setActErr(''); } catch (e) { setActErr(String((e as { code?: string })?.code ?? (e as Error)?.message ?? e)); } };
+  const [actOk, setActOk] = useState(false);
+  const run = async (f: () => Promise<unknown>) => { setActOk(false); setActErr(''); try { await f(); setActOk(true); setTimeout(() => setActOk(false), 2500); } catch (e) { setActErr(String((e as { code?: string })?.code ?? (e as Error)?.message ?? e)); } };
   const day = st.appts.filter((a) => a.clinicId === clinic.id && a.doctorId === doctor.id && a.date === date).sort(sortQueue);
   const count = (s: Appt['status']) => day.filter((a) => a.status === s).length;
   const rows = day.filter((a) => filter === 'all' || a.status === filter);
@@ -64,6 +65,7 @@ export function Queue() {
             <div className="mt-1 text-[11px] font-bold">{t(x.l)}</div>
           </div>))}
       </div>
+      {actOk && <div className="mx-4 mt-3 rounded-lg bg-ok-50 px-3 py-2 text-sm font-medium text-ok" role="status">✓ {t('Saved')}</div>}
       {actErr && <div className="mx-4 mt-3 rounded-lg bg-bad-50 px-3 py-2 text-sm font-medium text-bad" role="alert">{t('Could not save')} ({actErr})</div>}
       {firstWaiting && (
         <div className="mt-3 flex items-center gap-3 rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-4 text-white shadow-card">
