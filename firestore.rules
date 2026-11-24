@@ -1,0 +1,47 @@
+// DRAFT – NOT DEPLOYED, NOT TESTED against the Firebase emulator yet.
+// Must be reviewed and tested before any real patient data goes near it.
+//
+// Assumptions
+//  - Patients sign in with Firebase phone auth → request.auth.token.phone_number == "+91XXXXXXXXXX".
+//  - Appointments store phone in that same "+91…" format.
+//  - Clinic staff get a custom claim `clinicId` (set from a trusted admin script), so one clinic's staff can never read another clinic's data.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function myPhone() { return request.auth.token.phone_number; }
+    function isStaff(clinic) { return signedIn() && request.auth.token.clinicId == clinic; }
+
+    match /clinics/{clinic} {
+      // Clinic name, doctors and slot timings are public – patients need them to book.
+      allow read: if true;
+      allow write: if isStaff(clinic);
+
+      match /appts/{id} {
+        // A patient sees only appointments made on their own number; staff see their own clinic's.
+        allow read: if isStaff(clinic) || (signedIn() && resource.data.phone == myPhone());
+        allow create: if signedIn()
+          && request.resource.data.phone == myPhone()
+          && request.resource.data.status == 'waiting'
+          && request.resource.data.clinicId == clinic;
+        // Patients may only flip their own appointment to cancelled; staff may change status.
+        allow update: if isStaff(clinic)
+          || (signedIn() && resource.data.phone == myPhone()
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancelledBy'])
+              && request.resource.data.status == 'cancelled');
+        allow delete: if false;
+      }
+
+      // Per-slot counters (no personal data) so capacity can be checked without reading other patients' appointments.
+      match /slotCounts/{key} {
+        allow read: if true;
+        allow write: if signedIn();   // TODO: tighten – move to a Cloud Function / transaction-only path
+      }
+    }
+
+    // Family members belong to one phone number only.
+    match /patients/{phone}/members/{id} {
+      allow read, write: if signedIn() && phone == myPhone();
+    }
+  }
+}
