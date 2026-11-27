@@ -1,5 +1,5 @@
 /** Fill these before real patients use the app. The notice below is a DRAFT and must be reviewed by a qualified person. */
-export const CONTACT = 'the clinic reception';
+export const CONTACT = 'Dr. Devarsh Goyal, +91-7852860654, goyal.devarsh@gmail.com';
 export const NOTICE_VERSION = 'draft-1';
 export const NOTICE: { h: string; hHi: string; p: string; pHi: string }[] = [
   { h: 'What we collect', hHi: 'हम क्या जानकारी लेते हैं',

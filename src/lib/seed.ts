@@ -6,10 +6,10 @@ const mon_sat = (start: string, end: string): Schedule['days'] => ({ 1: [{ start
 export const SEED_CLINICS: Clinic[] = [
   {
     id: 'mittal', name: 'Mittal Clinic', area: 'Ambabari', city: 'Jaipur',
-    doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: 'Trauma · Arthroscopy · Arthroplasty', schedule: { days: mon_sat('16:00', '17:00'), slotMinutes: 15, perSlot: 2, dressing: true } }],
+    doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: 'Trauma · Arthroscopy · Arthroplasty', schedule: { days: mon_sat('19:30', '20:30'), slotMinutes: 10, perSlot: 1, dressing: true } }],
   },
   {
     id: 'brij', name: 'Shri Brij Fracture Hospital', area: 'Jhotwara', city: 'Jaipur',
-    doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: 'Trauma · Arthroscopy · Arthroplasty', schedule: { days: mon_sat('17:00', '19:00'), slotMinutes: 15, perSlot: 2, dressing: true } }],
+    doctors: [{ id: 'dg', name: 'Dr. Devarsh Goyal', qualification: 'MS Orthopaedics', speciality: 'Trauma · Arthroscopy · Arthroplasty', schedule: { days: mon_sat('17:00', '19:00'), slotMinutes: 6, perSlot: 1, dressing: true } }],
   },
 ];
